@@ -17,6 +17,8 @@ interface TaskData {
   ai_prompt: string
   first_question: string
   is_public: boolean
+  show_conversations: boolean
+  notify_email: string
   post_url: string
 }
 
@@ -56,6 +58,8 @@ export default function NewTaskPage() {
     ai_prompt: '',
     first_question: '',
     is_public: true,
+    show_conversations: true,
+    notify_email: '',
     post_url: '',
   })
 
@@ -72,6 +76,18 @@ export default function NewTaskPage() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Get user email for default notify_email
+  useEffect(() => {
+    const getUserEmail = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email) {
+        setTaskData(prev => ({ ...prev, notify_email: user.email! }))
+      }
+    }
+    getUserEmail()
+  }, [])
 
   // Track if initialized
   const initialized = useRef(false)
@@ -320,6 +336,8 @@ export default function NewTaskPage() {
 
 ${data.generatedPrompt}
 
+💡 הבוט יבקש מהמשתמשים להגיב על הפוסט שלך בסיום - זה מגביר חשיפה!
+
 האם אלה טובות בעיניך?`,
           [
             { label: '✅ מאשר', value: 'accept' },
@@ -436,8 +454,9 @@ ${data.facebookPost}
           video_url: taskData.video_url || null,
           ai_prompt: taskData.ai_prompt,
           first_question: taskData.first_question,
-          is_public: true,
-          notify_email: user?.email || null,
+          is_public: taskData.is_public,
+          show_conversations: taskData.show_conversations,
+          notify_email: taskData.notify_email || user?.email || null,
           user_id: user?.id,
         })
 
@@ -632,6 +651,45 @@ ${data.facebookPost}
                 placeholder="קישור לפוסט (אופציונלי)"
                 style={{ fontSize: '0.95rem' }}
               />
+            </div>
+
+            {/* Settings Section */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '8px' }}>
+              <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>⚙️ הגדרות</h3>
+
+              <div>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>אימייל להודעות</label>
+                <input
+                  type="email"
+                  className="input"
+                  value={taskData.notify_email}
+                  onChange={(e) => setTaskData(prev => ({ ...prev, notify_email: e.target.value }))}
+                  placeholder="אימייל לקבלת התראות על לידים"
+                  style={{ fontSize: '0.95rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={taskData.is_public}
+                    onChange={(e) => setTaskData(prev => ({ ...prev, is_public: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--primary-start)' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>הצג את המגנט באופן ציבורי</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={taskData.show_conversations}
+                    onChange={(e) => setTaskData(prev => ({ ...prev, show_conversations: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--primary-start)' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>הצג תשובות משתתפים אחרים</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
