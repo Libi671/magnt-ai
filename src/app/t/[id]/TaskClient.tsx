@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useState, useRef, useEffect } from 'react'
 
 interface Message {
-  role: 'user' | 'model'
+  role: 'user' | 'model' | 'system'
   content: string
 }
 
@@ -20,8 +20,9 @@ interface Task {
   }
 }
 
+type CollectionStep = 'none' | 'name' | 'phone' | 'email' | 'done'
+
 export default function TaskClient({ task }: { task: Task }) {
-  const [phone, setPhone] = useState('')
   const [leadId, setLeadId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -29,6 +30,15 @@ export default function TaskClient({ task }: { task: Task }) {
   const [completed, setCompleted] = useState(false)
   const [rating, setRating] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Data collection state
+  const [collectionStep, setCollectionStep] = useState<CollectionStep>('none')
+  const [userName, setUserName] = useState('')
+  const [userPhone, setUserPhone] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+  const [firstBotResponseReceived, setFirstBotResponseReceived] = useState(false)
+  const [pendingBotResponse, setPendingBotResponse] = useState<string | null>(null)
+  const [firstBotResponse, setFirstBotResponse] = useState<string | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -38,31 +48,69 @@ export default function TaskClient({ task }: { task: Task }) {
     scrollToBottom()
   }, [messages])
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!phone || phone.length < 9) return
+  // Check for cached user info on mount
+  useEffect(() => {
+    const cachedInfo = localStorage.getItem('magnt_user_info')
+    if (cachedInfo) {
+      try {
+        const { name, phone, email } = JSON.parse(cachedInfo)
+        if (name && phone && email) {
+          setUserName(name)
+          setUserPhone(phone)
+          setUserEmail(email)
+          setCollectionStep('done')
+          // Create lead with cached info
+          createLead(name, phone, email).then(lead => {
+            if (lead) setLeadId(lead.id)
+          })
+        }
+      } catch (e) {
+        console.error('Error parsing cached user info:', e)
+      }
+    }
+  }, [])
 
+  // Save user info to localStorage
+  const saveUserInfoToCache = (name: string, phone: string, email: string) => {
+    localStorage.setItem('magnt_user_info', JSON.stringify({ name, phone, email }))
+  }
+
+  // Initialize with first question
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([{ role: 'model', content: task.first_question }])
+    }
+  }, [task.first_question, messages.length])
+
+  // Validation functions
+  const isValidPhone = (phone: string): boolean => {
+    const cleaned = phone.replace(/[\s\-\(\)]/g, '')
+    return /^0[0-9]{8,9}$/.test(cleaned) || /^\+?972[0-9]{8,9}$/.test(cleaned)
+  }
+
+  const isValidEmail = (email: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  // Create lead in database
+  const createLead = async (name: string, phone: string, email: string) => {
     const supabase = createClient()
-
-    // Create lead
     const { data: lead, error } = await supabase
       .from('leads')
       .insert({
         task_id: task.id,
         phone: phone,
+        name: name,
+        email: email,
       })
       .select()
       .single()
 
     if (error) {
       console.error('Error creating lead:', error)
-      return
+      return null
     }
-
-    setLeadId(lead.id)
-
-    // Add first question as bot message
-    setMessages([{ role: 'model', content: task.first_question }])
+    return lead
   }
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -71,6 +119,67 @@ export default function TaskClient({ task }: { task: Task }) {
 
     const userMessage = input.trim()
     setInput('')
+
+    // Handle data collection steps
+    if (collectionStep === 'name') {
+      setUserName(userMessage)
+      setMessages(prev => [...prev,
+      { role: 'user', content: userMessage },
+      { role: 'system', content: `נעים מאוד ${userMessage}! 📱\n\nמה מספר הטלפון שלך?` }
+      ])
+      setCollectionStep('phone')
+      return
+    }
+
+    if (collectionStep === 'phone') {
+      if (!isValidPhone(userMessage)) {
+        setMessages(prev => [...prev,
+        { role: 'user', content: userMessage },
+        { role: 'system', content: '❌ המספר שהזנת לא תקין.\n\nאנא הזן מספר טלפון ישראלי תקין (למשל: 0501234567)' }
+        ])
+        return
+      }
+      setUserPhone(userMessage)
+      setMessages(prev => [...prev,
+      { role: 'user', content: userMessage },
+      { role: 'system', content: '✅ מעולה!\n\nמה כתובת האימייל שלך?' }
+      ])
+      setCollectionStep('email')
+      return
+    }
+
+    if (collectionStep === 'email') {
+      if (!isValidEmail(userMessage)) {
+        setMessages(prev => [...prev,
+        { role: 'user', content: userMessage },
+        { role: 'system', content: '❌ כתובת האימייל לא בפורמט תקין.\n\nאנא הזן כתובת אימייל תקינה (למשל: example@email.com)' }
+        ])
+        return
+      }
+      setUserEmail(userMessage)
+      setMessages(prev => [...prev,
+      { role: 'user', content: userMessage },
+      { role: 'system', content: '✅ תודה רבה! קיבלתי את כל הפרטים.\n\nבוא נמשיך... 🚀\n\nמקפיץ לך שוב את ההודעה מלמעלה:' }
+      ])
+      setCollectionStep('done')
+
+      // Create the lead and save to cache
+      const lead = await createLead(userName, userPhone, userMessage)
+      if (lead) {
+        setLeadId(lead.id)
+        saveUserInfoToCache(userName, userPhone, userMessage)
+      }
+
+      // Re-show the first bot response after a short delay
+      if (firstBotResponse) {
+        setTimeout(() => {
+          setMessages(prev => [...prev, { role: 'model', content: firstBotResponse }])
+        }, 1000)
+      }
+      return
+    }
+
+    // Regular message handling
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setLoading(true)
 
@@ -82,7 +191,7 @@ export default function TaskClient({ task }: { task: Task }) {
           taskId: task.id,
           leadId,
           message: userMessage,
-          history: messages,
+          history: messages.filter(m => m.role !== 'system'),
         }),
       })
 
@@ -92,7 +201,31 @@ export default function TaskClient({ task }: { task: Task }) {
         console.error('API Error:', data)
         setMessages(prev => [...prev, { role: 'model', content: `שגיאה: ${data.details || data.error}. נסה שוב.` }])
       } else if (data.response) {
-        setMessages(prev => [...prev, { role: 'model', content: data.response }])
+        // Check if this is the first bot response (after user's first message)
+        if (!firstBotResponseReceived && collectionStep === 'none') {
+          setFirstBotResponseReceived(true)
+          // Store and show bot response first
+          setFirstBotResponse(data.response)
+          setMessages(prev => [...prev, { role: 'model', content: data.response }])
+
+          // Then start data collection after a short delay
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              role: 'system',
+              content: '💡 לפני שנמשיך, אני צריך כמה פרטים קטנים...\n\nאיך אפשר לפנות אליך? מה השם שלך?'
+            }])
+            setCollectionStep('name')
+          }, 1500)
+
+          // Store the next response to show after collection
+          // (In case we need it, but actually we'll get new response after)
+        } else if (collectionStep !== 'done' && collectionStep !== 'none') {
+          // We're in collection mode, save response for later
+          setPendingBotResponse(data.response)
+        } else {
+          // Normal flow
+          setMessages(prev => [...prev, { role: 'model', content: data.response }])
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error)
@@ -139,62 +272,6 @@ export default function TaskClient({ task }: { task: Task }) {
 
   const embedUrl = getEmbedUrl(task.video_url)
 
-  // Lead Gate
-  if (!leadId) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <header className="glass" style={{ padding: '20px', textAlign: 'center' }}>
-          <h1 className="glow-text" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{task.title}</h1>
-          {task.users?.name && (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
-              מאת {task.users.name}
-            </p>
-          )}
-        </header>
-
-        {/* Video */}
-        {embedUrl && (
-          <div className="container" style={{ marginTop: '24px' }}>
-            <div className="video-container">
-              <iframe
-                src={embedUrl}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Description & Lead Gate */}
-        <div className="container" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-          <div className="card" style={{ padding: '40px', maxWidth: '450px', width: '100%', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🚀</div>
-            <h2 style={{ marginBottom: '12px' }}>מוכנים להתחיל?</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-              {task.description || 'הזינו את מספר הטלפון שלכם כדי להתחיל במשימה'}
-            </p>
-
-            <form onSubmit={handlePhoneSubmit}>
-              <input
-                type="tel"
-                className="input"
-                placeholder="050-1234567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                style={{ textAlign: 'center', fontSize: '1.2rem', marginBottom: '16px' }}
-                dir="ltr"
-              />
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                התחל את המשימה
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // Completed state
   if (completed) {
     return (
@@ -217,15 +294,40 @@ export default function TaskClient({ task }: { task: Task }) {
     )
   }
 
-  // Chat interface
+  // Chat interface (shown immediately)
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <header className="glass" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{task.title}</h1>
-        </div>
+      <header className="glass" style={{ padding: '16px 20px' }}>
+        <h1 className="glow-text" style={{ fontSize: '1.3rem', fontWeight: 700, textAlign: 'center' }}>{task.title}</h1>
+        {task.users?.name && (
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textAlign: 'center', marginTop: '4px' }}>
+            מאת {task.users.name}
+          </p>
+        )}
       </header>
+
+      {/* Video (if exists) */}
+      {embedUrl && (
+        <div className="container" style={{ marginTop: '16px' }}>
+          <div className="video-container">
+            <iframe
+              src={embedUrl}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Description */}
+      {task.description && (
+        <div className="container" style={{ marginTop: '16px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
+            {task.description}
+          </p>
+        </div>
+      )}
 
       {/* Chat Messages */}
       <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
@@ -233,25 +335,25 @@ export default function TaskClient({ task }: { task: Task }) {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`chat-message ${msg.role === 'user' ? 'user' : 'bot'}`}
+              className={`chat-message ${msg.role === 'user' ? 'user' : 'bot'}${msg.role === 'system' ? ' system' : ''}`}
               style={{ marginBottom: '12px' }}
             >
               {msg.content}
             </div>
           ))}
           {loading && (
-            <div className="chat-message bot" style={{ display: 'flex', gap: '4px' }}>
-              <span className="animate-pulse-glow" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary-start)' }}></span>
-              <span className="animate-pulse-glow" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary-start)', animationDelay: '0.2s' }}></span>
-              <span className="animate-pulse-glow" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary-start)', animationDelay: '0.4s' }}></span>
+            <div className="chat-message bot" style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '16px 20px' }}>
+              <span className="typing-dot"></span>
+              <span className="typing-dot"></span>
+              <span className="typing-dot"></span>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Rating & Complete (show after a few messages) */}
-      {messages.length >= 4 && (
+      {/* Rating & Complete (show after collection is done and some messages) */}
+      {collectionStep === 'done' && messages.filter(m => m.role !== 'system').length >= 6 && (
         <div className="glass" style={{ padding: '16px', margin: '0 20px 20px', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
           <p style={{ marginBottom: '12px', fontSize: '0.9rem' }}>סיימת? דרג את החוויה:</p>
           <div className="rating" style={{ justifyContent: 'center', marginBottom: '12px' }}>
@@ -277,10 +379,16 @@ export default function TaskClient({ task }: { task: Task }) {
           <input
             type="text"
             className="input"
-            placeholder="כתוב הודעה..."
+            placeholder={
+              collectionStep === 'name' ? 'הכנס את שמך...' :
+                collectionStep === 'phone' ? 'הכנס מספר טלפון...' :
+                  collectionStep === 'email' ? 'הכנס כתובת אימייל...' :
+                    'כתוב הודעה...'
+            }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
+            dir={collectionStep === 'phone' || collectionStep === 'email' ? 'ltr' : 'rtl'}
           />
           <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
