@@ -112,7 +112,20 @@ export async function POST(request: NextRequest) {
 
         // Action: generate_prompt - Generate AI prompt for the bot
         if (action === 'generate_prompt') {
+            const { postUrl } = body
             const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+
+            const closingInstruction = postUrl
+                ? `
+
+**בסיום:**
+לאחר השלמת אבני הדרך, בקש מהמשתמש להגיב על הפוסט שדרכו הגיע למגנט, להמליץ ולכתוב איך היה לו המגנט.
+שלח לו את הקישור לפוסט: ${postUrl}`
+                : `
+
+**בסיום:**
+לאחר השלמת אבני הדרך, בקש מהמשתמש לשתף את חווייתו ולהמליץ לאחרים.`
+
             const prompt = `צור הנחיות לבוט AI עבור מגנט לידים בנושא: "${topic}"
 ${description ? `תיאור: "${description}"` : ''}
 
@@ -128,6 +141,7 @@ ${description ? `תיאור: "${description}"` : ''}
 1. [אבן דרך ראשונה]
 2. [אבן דרך שנייה]
 3. [אבן דרך שלישית]
+${closingInstruction}
 
 חשוב: אל תכתוב תסריט מדויק, רק אבני דרך כלליות. החזר רק את התוכן, בלי "הנה ההנחיות" או טקסט נוסף.`
 
@@ -143,16 +157,19 @@ ${description ? `תיאור: "${description}"` : ''}
         // Action: generate_first_question - Generate opening question
         if (action === 'generate_first_question') {
             const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
-            const prompt = `כתוב שאלה פותחת קצרה וידידותית לבוט בנושא: "${topic}"
+            const prompt = `כתוב שאלה פותחת לבוט בנושא: "${topic}"
 ${description ? `תיאור: "${description}"` : ''}
 
-השאלה צריכה להיות:
-- קצרה (עד 20 מילים)
-- ידידותית
-- פותחת שיחה
-- כוללת אימוג'י אחד
+דרישות:
+- שאלה אחת בלבד
+- עד 15 מילים
+- כוללת אימוג'י אחד בסוף
+- פונה ישירות למשתמש
 
-החזר רק את השאלה עצמה, בלי הקדמה.`
+חשוב מאוד: החזר רק את השאלה עצמה.
+אסור לכתוב הקדמה כמו "נשמע מעניין" או "הנה שאלה".
+אסור לכתוב סיום כמו "מה דעתך?" אחרי השאלה.
+רק השאלה הנקייה, כלום לפני וכלום אחרי.`
 
             const result = await model.generateContent(prompt)
             const firstQuestion = result.response.text().trim()
@@ -160,6 +177,31 @@ ${description ? `תיאור: "${description}"` : ''}
             return NextResponse.json({
                 success: true,
                 firstQuestion
+            })
+        }
+
+        // Action: generate_facebook_post - Generate a Facebook post for the lead magnet
+        if (action === 'generate_facebook_post') {
+            const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+            const prompt = `כתוב פוסט קצר לפייסבוק שמזמין אנשים להשתתף במגנט לידים.
+
+נושא המגנט: "${topic}"
+${description ? `תיאור: "${description}"` : ''}
+
+דרישות:
+- עד 100 מילים
+- כולל 2-3 אימוג'ים
+- קריאה לפעולה בסוף (לדוגמה: "רוצים? כתבו לי בתגובות!")
+- סגנון ידידותי ומזמין
+
+חשוב: החזר רק את הפוסט עצמו, בלי הקדמה או הסבר.`
+
+            const result = await model.generateContent(prompt)
+            const facebookPost = result.response.text().trim()
+
+            return NextResponse.json({
+                success: true,
+                facebookPost
             })
         }
 

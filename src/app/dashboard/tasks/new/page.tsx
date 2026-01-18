@@ -73,23 +73,27 @@ export default function NewTaskPage() {
     scrollToBottom()
   }, [messages])
 
+  // Track if initialized
+  const initialized = useRef(false)
+
   // Initialize chat
   useEffect(() => {
-    if (messages.length === 0) {
-      addBotMessage(
-        `🎯 ברוכים הבאים ליצירת מגנט לידים!
+    if (initialized.current) return
+    initialized.current = true
+
+    addBotMessage(
+      `🎯 ברוכים הבאים ליצירת מגנט לידים!
 
 מגנט לידים הוא כלי חכם שעובד דרך הרשתות החברתיות שלך.
 כשמישהו מגיב לפוסט שלך עם הקישור - הוא מקבל חוויה אינטראקטיבית, ואתה מקבל את הפרטים שלו + מידע עמוק מהשיחה.
 
 בוא נתחיל! יש לך פוסט קיים שתרצה להוסיף לו מגנט, או שנתחיל מאפס?`,
-        [
-          { label: '📱 מתחיל מפוסט קיים', value: 'post' },
-          { label: '✨ מתחיל מהמגנט', value: 'magnet' }
-        ]
-      )
-      setStep('choose_path')
-    }
+      [
+        { label: '📱 מתחיל מפוסט קיים', value: 'post' },
+        { label: '✨ מתחיל מהמגנט', value: 'magnet' }
+      ]
+    )
+    setStep('choose_path')
   }, [])
 
   const addBotMessage = (content: string, buttons?: { label: string; value: string }[]) => {
@@ -168,8 +172,13 @@ export default function NewTaskPage() {
 
       case 'question_suggestion':
         if (value === 'accept') {
-          addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
-          setStep('preview')
+          // If started from magnet, generate Facebook post suggestion
+          if (currentPath === 'magnet') {
+            generateFacebookPost()
+          } else {
+            addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+            setStep('preview')
+          }
         } else {
           addBotMessage('בסדר, כתוב את השאלה הפותחת במילים שלך:')
           setStep('question_manual')
@@ -227,8 +236,13 @@ export default function NewTaskPage() {
 
       case 'question_manual':
         setTaskData(prev => ({ ...prev, first_question: userInput }))
-        addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
-        setStep('preview')
+        // If started from magnet, generate Facebook post suggestion
+        if (currentPath === 'magnet') {
+          generateFacebookPost()
+        } else {
+          addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+          setStep('preview')
+        }
         break
     }
   }
@@ -292,7 +306,8 @@ export default function NewTaskPage() {
         body: JSON.stringify({
           action: 'generate_prompt',
           topic: taskData.title,
-          description: taskData.description
+          description: taskData.description,
+          postUrl: taskData.post_url
         })
       })
 
@@ -365,6 +380,46 @@ ${data.generatedPrompt}
     }
   }
 
+  const generateFacebookPost = async () => {
+    setLoading(true)
+    addBotMessage('📝 יוצר הצעה לפוסט פייסבוק...')
+
+    try {
+      const response = await fetch('/api/analyze-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_facebook_post',
+          topic: taskData.title,
+          description: taskData.description
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.facebookPost) {
+        addBotMessage(
+          `📱 הנה הצעה לפוסט פייסבוק שיכול להתאים למגנט הזה:
+
+${data.facebookPost}
+
+💡 טיפ: כשהמגנט יהיה מוכן, שלח את הפוסט הזה ברשת החברתית בצירוף הקישור שיווצר.
+
+🎉 הכל מוכן! לחץ על "סיום ויצירה" לשמור את המגנט.`
+        )
+      } else {
+        addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+      }
+      setStep('preview')
+    } catch (error) {
+      console.error('Error generating Facebook post:', error)
+      addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+      setStep('preview')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSaveTask = async () => {
     setLoading(true)
     setStep('saving')
@@ -376,7 +431,13 @@ ${data.generatedPrompt}
       const { error } = await supabase
         .from('tasks')
         .insert({
-          ...taskData,
+          title: taskData.title,
+          description: taskData.description,
+          video_url: taskData.video_url || null,
+          ai_prompt: taskData.ai_prompt,
+          first_question: taskData.first_question,
+          is_public: true,
+          notify_email: user?.email || null,
           user_id: user?.id,
         })
 
@@ -466,12 +527,12 @@ ${data.generatedPrompt}
                   }
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  disabled={loading}
+                  disabled={loading || messages[messages.length - 1]?.buttons !== undefined}
                 />
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={loading || !input.trim()}
+                  disabled={loading || !input.trim() || messages[messages.length - 1]?.buttons !== undefined}
                 >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M12 19l-7-7 7-7M19 12H5" />
@@ -503,54 +564,75 @@ ${data.generatedPrompt}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>נושא</label>
-              <div style={{ color: taskData.title ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                {taskData.title || '—'}
-              </div>
+              <input
+                type="text"
+                className="input"
+                value={taskData.title}
+                onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="נושא המגנט"
+                style={{ fontSize: '0.95rem' }}
+              />
             </div>
 
             <div>
               <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>תיאור</label>
-              <div style={{ color: taskData.description ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                {taskData.description || '—'}
-              </div>
+              <textarea
+                className="input"
+                value={taskData.description}
+                onChange={(e) => setTaskData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="תיאור קצר"
+                rows={2}
+                style={{ fontSize: '0.95rem', resize: 'vertical' }}
+              />
             </div>
 
             <div>
               <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>סרטון</label>
-              <div style={{ color: taskData.video_url ? 'var(--text-primary)' : 'var(--text-muted)', wordBreak: 'break-all' }}>
-                {taskData.video_url || '—'}
-              </div>
+              <input
+                type="text"
+                className="input"
+                value={taskData.video_url}
+                onChange={(e) => setTaskData(prev => ({ ...prev, video_url: e.target.value }))}
+                placeholder="קישור לסרטון (אופציונלי)"
+                style={{ fontSize: '0.95rem' }}
+              />
             </div>
 
             <div>
               <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>הנחיות לבוט</label>
-              <div style={{
-                color: taskData.ai_prompt ? 'var(--text-primary)' : 'var(--text-muted)',
-                whiteSpace: 'pre-wrap',
-                fontSize: '0.9rem',
-                background: 'var(--bg-glass)',
-                padding: taskData.ai_prompt ? '12px' : '0',
-                borderRadius: '8px'
-              }}>
-                {taskData.ai_prompt || '—'}
-              </div>
+              <textarea
+                className="input"
+                value={taskData.ai_prompt}
+                onChange={(e) => setTaskData(prev => ({ ...prev, ai_prompt: e.target.value }))}
+                placeholder="הנחיות לבוט"
+                rows={5}
+                style={{ fontSize: '0.9rem', resize: 'vertical' }}
+              />
             </div>
 
             <div>
               <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>שאלה פותחת</label>
-              <div style={{ color: taskData.first_question ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                {taskData.first_question || '—'}
-              </div>
+              <input
+                type="text"
+                className="input"
+                value={taskData.first_question}
+                onChange={(e) => setTaskData(prev => ({ ...prev, first_question: e.target.value }))}
+                placeholder="שאלה פותחת"
+                style={{ fontSize: '0.95rem' }}
+              />
             </div>
 
-            {taskData.post_url && (
-              <div>
-                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>קישור לפוסט</label>
-                <a href={taskData.post_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-start)', wordBreak: 'break-all' }}>
-                  {taskData.post_url}
-                </a>
-              </div>
-            )}
+            <div>
+              <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>קישור לפוסט</label>
+              <input
+                type="text"
+                className="input"
+                value={taskData.post_url}
+                onChange={(e) => setTaskData(prev => ({ ...prev, post_url: e.target.value }))}
+                placeholder="קישור לפוסט (אופציונלי)"
+                style={{ fontSize: '0.95rem' }}
+              />
+            </div>
           </div>
         </div>
       </div>
