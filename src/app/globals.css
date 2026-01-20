@@ -534,6 +534,16 @@ body {
   .dashboard-main {
     padding: 16px;
   }
+
+  /* Show hamburger menu on mobile */
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Hide user avatar on mobile to make room for hamburger */
+  .header-user {
+    display: none;
+  }
 }
 
 /* Stat cards hover */
