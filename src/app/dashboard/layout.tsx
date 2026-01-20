@@ -19,7 +19,10 @@ export default async function DashboardLayout({
     <div className="dashboard-layout-new">
       {/* Top Header Navigation */}
       <header className="dashboard-header">
-        {/* Logo on right (RTL) */}
+        {/* Mobile Navigation - appears first for RTL (right side) */}
+        <MobileNav />
+
+        {/* Logo */}
         <Link href="/dashboard" className="header-logo">
           <img
             src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
@@ -51,9 +54,6 @@ export default async function DashboardLayout({
             </div>
           )}
         </div>
-
-        {/* Mobile Navigation */}
-        <MobileNav />
       </header>
 
       {/* Main Content */}
