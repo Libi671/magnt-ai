@@ -396,7 +396,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
 
   // Main Chat Layout
   return (
-    <div style={{
+    <div className="task-page-main" style={{
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -673,8 +673,8 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         </div>
       )}
 
-      {/* Share Section */}
-      <div style={{
+      {/* Share Section - Desktop Only */}
+      <div className="desktop-share-section" style={{
         padding: '24px 20px',
         borderTop: '1px solid var(--border-color)',
         textAlign: 'center'
@@ -690,9 +690,10 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
       {/* Share Modal */}
       {showShareModal && <ShareModal />}
 
-      {/* Magnt Badge - Large and prominent */}
+      {/* Magnt Badge - Desktop Fixed */}
       <Link
         href="/"
+        className="desktop-fixed-badge"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -727,6 +728,39 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
           <span>נוצר עם <strong>Magnt.AI</strong> - ללקוחות ועסקאות</span>
         </div>
       </Link>
+
+      {/* Mobile Sticky Footer */}
+      <div className="mobile-sticky-footer">
+        {/* Brand */}
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img
+            src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
+            alt="Magnt.AI"
+            style={{ height: '28px' }}
+          />
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>נוצר עם <strong style={{ color: 'white' }}>Magnt.AI</strong></span>
+        </Link>
+
+        {/* Share Button (Icon only) */}
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="btn btn-accent"
+          style={{
+            padding: '8px',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          aria-label="שתף את האתגר"
+        >
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }

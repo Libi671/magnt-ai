@@ -1389,3 +1389,48 @@ tr:hover td {
     max-height: calc(70vh - 100px);
   }
 }
+
+/* ======================================
+   TASK PAGE MOBILE OPTIMIZATIONS
+   ====================================== */
+
+/* Mobile Sticky Footer */
+.mobile-sticky-footer {
+  display: none;
+  /* Hidden on desktop */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(20, 20, 28, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+  padding: 12px 20px;
+  z-index: 100;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+
+  /* Hide desktop elements on mobile */
+  .desktop-share-section {
+    display: none !important;
+  }
+
+  .desktop-fixed-badge {
+    display: none !important;
+  }
+
+  /* Show mobile elements */
+  .mobile-sticky-footer {
+    display: flex;
+  }
+
+  /* Add padding to bottom so content isn't covered */
+  .task-page-main {
+    padding-bottom: 80px !important;
+  }
+}
