@@ -13,7 +13,6 @@ interface Message {
 interface TaskData {
   title: string
   description: string
-  video_url: string
   ai_prompt: string
   first_question: string
   is_public: boolean
@@ -30,8 +29,6 @@ type WizardStep =
   | 'topic_suggestion'
   | 'topic_manual'
   | 'description_input'
-  | 'video_question'
-  | 'video_input'
   | 'generating_prompt'
   | 'prompt_suggestion'
   | 'prompt_manual'
@@ -54,7 +51,6 @@ export default function NewTaskPage() {
   const [taskData, setTaskData] = useState<TaskData>({
     title: '',
     description: '',
-    video_url: '',
     ai_prompt: '',
     first_question: '',
     is_public: true,
@@ -167,14 +163,7 @@ export default function NewTaskPage() {
         }
         break
 
-      case 'video_question':
-        if (value === 'yes') {
-          addBotMessage('הדבק קישור לסרטון (YouTube, Vimeo, או קישור ישיר):')
-          setStep('video_input')
-        } else {
-          generatePrompt()
-        }
-        break
+
 
       case 'prompt_suggestion':
         if (value === 'accept') {
@@ -229,21 +218,10 @@ export default function NewTaskPage() {
 
       case 'description_input':
         setTaskData(prev => ({ ...prev, description: userInput }))
-        addBotMessage(
-          'האם תרצה להוסיף סרטון שיופיע בראש המגנט?',
-          [
-            { label: '✅ כן, יש לי סרטון', value: 'yes' },
-            { label: '⏭️ לא, נמשיך', value: 'no' }
-          ]
-        )
-        setStep('video_question')
-        break
-
-      case 'video_input':
-        setTaskData(prev => ({ ...prev, video_url: userInput }))
-        addBotMessage('✅ הסרטון נשמר!')
         generatePrompt()
         break
+
+
 
       case 'prompt_manual':
         setTaskData(prev => ({ ...prev, ai_prompt: userInput }))
@@ -451,7 +429,6 @@ ${data.facebookPost}
         .insert({
           title: taskData.title,
           description: taskData.description,
-          video_url: taskData.video_url || null,
           ai_prompt: taskData.ai_prompt,
           first_question: taskData.first_question,
           is_public: taskData.is_public,
@@ -541,8 +518,7 @@ ${data.facebookPost}
                   className="input"
                   placeholder={
                     step === 'post_input' ? 'הדבק קישור או קוד הטמעה...' :
-                      step === 'video_input' ? 'הדבק קישור לסרטון...' :
-                        'כתוב תשובה...'
+                      'כתוב תשובה...'
                   }
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -605,17 +581,7 @@ ${data.facebookPost}
               />
             </div>
 
-            <div>
-              <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>סרטון</label>
-              <input
-                type="text"
-                className="input"
-                value={taskData.video_url}
-                onChange={(e) => setTaskData(prev => ({ ...prev, video_url: e.target.value }))}
-                placeholder="קישור לסרטון (אופציונלי)"
-                style={{ fontSize: '0.95rem' }}
-              />
-            </div>
+
 
             <div>
               <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>הנחיות לבוט</label>

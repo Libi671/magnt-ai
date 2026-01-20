@@ -1,16 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import CopyLinkButton from '@/components/CopyLinkButton'
+import EditTaskButton from '@/components/EditTaskButton'
 
 export default async function TasksPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: tasks } = await supabase
+  console.log('TasksPage - user:', user?.id, user?.email)
+
+  const { data: tasks, error } = await supabase
     .from('tasks')
-    .select('*, leads(count)')
+    .select('id, title, description, ai_prompt, first_question, is_public, show_conversations, notify_email, post_url, created_at, user_id')
     .eq('user_id', user?.id)
     .order('created_at', { ascending: false })
+
+  console.log('TasksPage - tasks:', tasks?.length, 'error:', error)
 
   return (
     <div>
@@ -47,6 +52,10 @@ export default async function TasksPage() {
                   {task.leads?.[0]?.count || 0} לידים
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                  <EditTaskButton
+                    task={task}
+                    style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                  />
                   <Link
                     href={`/t/${task.id}`}
                     target="_blank"
