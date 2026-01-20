@@ -11,7 +11,7 @@ export default async function TasksPage() {
 
   const { data: tasks, error } = await supabase
     .from('tasks')
-    .select('id, title, description, ai_prompt, first_question, is_public, show_conversations, notify_email, post_url, created_at, user_id')
+    .select('*, leads(count)')
     .eq('user_id', user?.id)
     .order('created_at', { ascending: false })
 
