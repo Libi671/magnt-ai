@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import MobileNav from '@/components/MobileNav'
 
 export default async function AboutPage() {
     const supabase = await createClient()
@@ -29,6 +30,9 @@ export default async function AboutPage() {
         <div style={{ minHeight: '100vh' }}>
             {/* Header - Same as Dashboard */}
             <header className="dashboard-header">
+                {/* Mobile Navigation - appears first for RTL (right side) */}
+                <MobileNav />
+
                 {/* Logo on right (RTL) */}
                 <Link href="/dashboard" className="header-logo">
                     <img
@@ -44,7 +48,7 @@ export default async function AboutPage() {
                     <Link href="/dashboard/tasks" className="header-nav-link">משימות</Link>
                     <Link href="/dashboard/series" className="header-nav-link">סדרות</Link>
                     <Link href="/dashboard/leads" className="header-nav-link">לידים</Link>
-                    <Link href="/about" className="header-nav-link">על המערכת</Link>
+                    <Link href="/about" className="header-nav-link active">על המערכת</Link>
                 </nav>
 
                 {/* User Avatar on left (RTL) */}
