@@ -66,7 +66,7 @@ export default async function AboutPage() {
             </header>
 
             {/* Hero Section - Compact */}
-            <section style={{ paddingTop: '100px', paddingBottom: '20px', textAlign: 'center' }}>
+            <section style={{ paddingTop: '140px', paddingBottom: '80px', textAlign: 'center' }}>
                 <div style={{ position: 'relative', zIndex: 1, maxWidth: '600px', margin: '0 auto', padding: '0 20px' }}>
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '12px' }}>
                         על <span className="glow-text">Magnt.AI</span>
