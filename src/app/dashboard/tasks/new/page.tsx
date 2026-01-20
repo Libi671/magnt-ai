@@ -46,6 +46,7 @@ export default function NewTaskPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<WizardStep>('welcome')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
   // Task data being built
   const [taskData, setTaskData] = useState<TaskData>({
@@ -66,7 +67,10 @@ export default function NewTaskPage() {
   const [currentPath, setCurrentPath] = useState<'post' | 'magnet' | null>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Scroll only within the chat container, not the whole page
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
   }
 
   useEffect(() => {
@@ -464,9 +468,9 @@ ${data.facebookPost}
 
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
         {/* Chat Column */}
-        <div className="card" style={{ flex: '1 1 400px', minWidth: '350px', display: 'flex', flexDirection: 'column', height: '600px' }}>
+        <div className="card wizard-chat-card" style={{ flex: '1 1 400px', minWidth: '300px', display: 'flex', flexDirection: 'column' }}>
           {/* Chat Messages */}
-          <div style={{ flex: 1, overflow: 'auto', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+          <div ref={chatContainerRef} className="wizard-chat-messages" style={{ flex: 1, overflow: 'auto', padding: '20px', display: 'flex', flexDirection: 'column' }}>
             {messages.map((msg, index) => (
               <div key={index}>
                 <div

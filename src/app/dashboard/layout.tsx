@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import MobileNav from '@/components/MobileNav'
 
 export default async function DashboardLayout({
   children,
@@ -27,7 +28,7 @@ export default async function DashboardLayout({
           />
         </Link>
 
-        {/* Center Navigation */}
+        {/* Center Navigation - Desktop */}
         <nav className="header-nav">
           <Link href="/dashboard" className="header-nav-link active">ראשי</Link>
           <Link href="/dashboard/tasks" className="header-nav-link">משימות</Link>
@@ -50,6 +51,9 @@ export default async function DashboardLayout({
             </div>
           )}
         </div>
+
+        {/* Mobile Navigation */}
+        <MobileNav />
       </header>
 
       {/* Main Content */}
