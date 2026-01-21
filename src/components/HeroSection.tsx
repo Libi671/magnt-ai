@@ -102,30 +102,56 @@ export default function HeroSection() {
         setLoading(true)
 
         try {
-            // Prepare history for API (without buttons)
-            const history = messages.map(msg => ({
-                role: msg.role,
-                content: msg.content
-            }))
+            // Check if this is the first response (only 1 message = the opening message)
+            const isFirstResponse = messages.length === 1
 
-            const response = await fetch('/api/hero-chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: userMessage,
-                    history
-                })
-            })
+            if (isFirstResponse) {
+                // Hardcoded first response - no API call needed
+                const isPositive = userMessage.includes('בטח') || userMessage.includes('כן') || userMessage.includes('רוצה')
 
-            const data = await response.json()
+                let firstResponse: string
+                if (isPositive) {
+                    firstResponse = `מעולה! 🎯
 
-            if (data.response) {
-                setMessages(prev => [...prev, { role: 'model', content: data.response }])
+לפני שנצלול לפתרון, אני חייב להבין את התמונה המלאה אצלך.
+
+כמה עוקבים יש לך בערך בכל הרשתות החברתיות יחד? וכמה לידים (מתעניינים שהשאירו פרטי קשר) נכנסים לך מהם בפועל בכל חודש?`
+                } else {
+                    firstResponse = `אני מבין, אבל תן לי רק לשאול שאלה אחת קטנה שתעזור לך להבין את הפוטנציאל שלך:
+
+כמה עוקבים יש לך בערך בכל הרשתות החברתיות יחד? וכמה מהם הפכו ללקוחות משלמים?`
+                }
+
+                // Simulate slight delay for natural feel
+                await new Promise(resolve => setTimeout(resolve, 800))
+                setMessages(prev => [...prev, { role: 'model', content: firstResponse }])
             } else {
-                setMessages(prev => [...prev, {
-                    role: 'model',
-                    content: 'אופס, משהו השתבש. נסה שוב או התחבר למערכת כדי להמשיך.'
-                }])
+                // From second question onwards - call Gemini API
+                // Prepare history for API (without buttons)
+                const history = messages.map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }))
+
+                const response = await fetch('/api/hero-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        history
+                    })
+                })
+
+                const data = await response.json()
+
+                if (data.response) {
+                    setMessages(prev => [...prev, { role: 'model', content: data.response }])
+                } else {
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        content: 'אופס, משהו השתבש. נסה שוב או התחבר למערכת כדי להמשיך.'
+                    }])
+                }
             }
         } catch (error) {
             console.error('Chat error:', error)
