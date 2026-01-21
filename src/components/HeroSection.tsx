@@ -212,13 +212,13 @@ export default function HeroSection() {
                                     </div>
                                 </div>
 
-                                {/* Buttons (if any) */}
                                 {msg.buttons && msg.buttons.length > 0 && index === messages.length - 1 && !loading && (
                                     <div style={{
                                         display: 'flex',
                                         gap: '10px',
                                         marginTop: '12px',
-                                        justifyContent: 'flex-end'
+                                        marginRight: '44px',
+                                        justifyContent: 'flex-start'
                                     }}>
                                         {msg.buttons.map((btn, btnIndex) => (
                                             <button
@@ -279,10 +279,9 @@ export default function HeroSection() {
                     </form>
                 </div>
 
-                {/* CTA Button */}
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                     <Link href="/login" className="btn btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
-                        התחבר וצור את המגנט שלך בחינם →
+                        התחבר וצור את המגנט שלך בחינם
                     </Link>
                 </div>
 
