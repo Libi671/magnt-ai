@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import HeroSection from '@/components/HeroSection'
+import PricingSection from '@/components/PricingSection'
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -55,13 +56,16 @@ export default async function LandingPage() {
       <section id="how" className="section" style={{ background: 'var(--bg-glass)' }}>
         <div className="container">
           <h2 className="section-title">איך זה עובד?</h2>
+          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '-20px', marginBottom: '40px' }}>
+            יוצרים מגנט ⬅ מקבלים לידים, יוצרים אתגר ⬅ משיגים לקוחות.
+          </p>
 
           <div className="steps-grid">
             <div className="step-card">
               <div className="step-number">1</div>
               <div className="step-icon">🎯</div>
-              <h3>צור משימה</h3>
-              <p>הגדר נושא, שאלות וזרימת שיחה. ה-AI יעשה את השאר.</p>
+              <h3>צור מגנט</h3>
+              <p>הכנס פוסט או הגדר נושא. ה-AI יצור לך מגנט לידים עם קישור לשתף.</p>
             </div>
 
             <div className="step-card">
@@ -73,20 +77,13 @@ export default async function LandingPage() {
 
             <div className="step-card">
               <div className="step-number">3</div>
-              <div className="step-icon">🔥</div>
-              <h3>ויראליות</h3>
-              <p>האלגוריתם מעדיף תוכן אינטראקטיבי. הפוסט שלך מתפשט.</p>
-            </div>
-
-            <div className="step-card">
-              <div className="step-number">4</div>
               <div className="step-icon">💰</div>
               <h3>קבל לידים</h3>
               <p>כל משתתף משאיר פרטים. אתה מקבל רשימה של לקוחות מעוניינים.</p>
             </div>
 
             <div className="step-card">
-              <div className="step-number">5</div>
+              <div className="step-number">4</div>
               <div className="step-icon">🔄</div>
               <h3>מחממים את הלידים</h3>
               <p>שולחים באופן אוטומטי למתעניינים סדרת מסרים ומקבלים לידים שרוצים לסלוק.</p>
@@ -95,8 +92,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Feed Section - Dark */}
-      <section id="feed" className="section">
+      {/* Feed Section - Dark - HIDDEN */}
+      <section id="feed" className="section" style={{ display: 'none' }}>
         <div className="container">
           <h2 className="section-title">משימות פופולריות</h2>
 
@@ -151,159 +148,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section - Light */}
-      <section id="pricing" className="section" style={{ background: 'var(--bg-glass)' }}>
-        <div className="container">
-          <h2 className="section-title">תמחור 💳</h2>
-
-          {/* Price Anchoring */}
-          <div style={{
-            textAlign: 'center',
-            maxWidth: '600px',
-            margin: '0 auto 40px',
-            padding: '24px',
-            background: 'rgba(102, 126, 234, 0.1)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid rgba(102, 126, 234, 0.2)'
-          }}>
-            <p style={{ fontSize: '1.1rem', lineHeight: 1.8 }}>
-              💡 כמה עולה לך היום כל ליד מפייסבוק? <strong>50-100 ש״ח?</strong><br />
-              וכמה מהם באמת הופכים ללקוחות משלמים?
-            </p>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '12px' }}>
-              עם מערכת חימום אוטומטית, הלידים שלך מגיעים <strong style={{ color: 'var(--text-primary)' }}>מוכנים לקנות</strong>.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', maxWidth: '750px', margin: '0 auto' }}>
-            {/* Free Plan */}
-            <div className="card" style={{ padding: '32px' }}>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '8px', textAlign: 'center' }}>חינמי</h3>
-              <div style={{ fontSize: '3rem', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>0 ש״ח</div>
-              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '24px' }}>לנצח</p>
-
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                <ul style={{ listStyle: 'none', marginBottom: '24px' }}>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> מגנטים ללא הגבלה
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> עד 25 לידים
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> צ׳אט AI מתקדם
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                    <span>❌</span> סדרת חימום
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                    <span>❌</span> חיבור לוואטסאפ
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                    <span>❌</span> מערכת CRM
-                  </li>
-                </ul>
-              </div>
-
-              <Link href="/login" className="btn btn-secondary" style={{ width: '100%' }}>
-                התחל בחינם
-              </Link>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="card" style={{ padding: '32px', border: '2px solid var(--primary-start)', position: 'relative' }}>
-              <div style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'var(--gradient-primary)',
-                padding: '6px 20px',
-                borderRadius: '20px',
-                fontSize: '0.85rem',
-                fontWeight: 600
-              }}>
-                ⭐ מומלץ
-              </div>
-
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '8px', textAlign: 'center' }}>מקצועי</h3>
-
-              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.2rem' }}>599 ש״ח</span>
-              </div>
-              <div style={{ fontSize: '3rem', fontWeight: 800, textAlign: 'center' }} className="glow-text">499 ש״ח</div>
-              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '8px' }}>לחודש</p>
-
-              <div style={{
-                background: 'linear-gradient(135deg, #f5576c, #f093fb)',
-                padding: '6px 16px',
-                borderRadius: '20px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                textAlign: 'center',
-                marginBottom: '24px'
-              }}>
-                🔥 מחיר השקה לזמן מוגבל
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                <ul style={{ listStyle: 'none', marginBottom: '24px' }}>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> מגנטים ללא הגבלה
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> לידים ללא הגבלה
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> צ׳אט AI מתקדם
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> סדרת חימום
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> חיבור מלא לוואטסאפ
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> מערכת CRM מתקדמת
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> מחקר לקוח + תסריט שיחה
-                  </li>
-                  <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#22c55e' }}>✅</span> בוט מענה אישי 24/7
-                  </li>
-                </ul>
-              </div>
-
-              <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>
-                הצטרף עכשיו
-              </Link>
-            </div>
-          </div>
-
-          {/* Bonus Banner */}
-          <div style={{
-            maxWidth: '750px',
-            margin: '40px auto 0',
-            padding: '24px',
-            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(245, 87, 108, 0.2))',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid rgba(102, 126, 234, 0.3)',
-            textAlign: 'center'
-          }}>
-            <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '12px' }}>
-              🎁 בונוס ל-10 הנרשמים הראשונים:
-            </p>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              2 פגישות אפיון אישיות להתאמה מושלמת של המערכת לעסק שלך<br />
-              <strong style={{ color: 'var(--text-primary)' }}>(שווי 600 ש״ח - במתנה!)</strong>
-            </p>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              📞 0525666536 | 📧 libi41@gmail.com
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Pricing Section */}
+      <PricingSection />
 
       {/* FAQ Section - Dark */}
       <section id="faq" className="section">
@@ -312,7 +158,7 @@ export default async function LandingPage() {
 
           <div style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="card" style={{ padding: '24px' }}>
-              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>איך זה שונה מלפרסם קישור לדף נחיתה רגיל?</h3>
+              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>איך זה שונה מלפרסם קישור לדף נחיתה או לשלוח מדריך בPDF?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
                 מגנט AI יוצר חוויה אינטראקטיבית ואישית עם כל מבקר. במקום טופס קר ומרוחק, הלקוח מנהל שיחה אמיתית עם AI שמבין את הצרכים שלו, וזה מגדיל משמעותית את יחסי ההמרה.
               </p>
@@ -321,21 +167,28 @@ export default async function LandingPage() {
             <div className="card" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>מה קורה עם הלידים שנאספו?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                נשלח לכם מייל מסודר אחרי כל ליד שהשגתם. במייל תקבלו את פרטי הקשר של הליד ודוח מסכם על הלקוח. בנוסף, הלידים נשמרים בדאשבורד שלכם. אתם מקבלים גישה מלאה לפרטים, כולל השם, הטלפון, האימייל ותמליל השיחה המלא.
+                נשלח לכם מייל מסודר אחרי כל ליד שהשגתם. במייל תקבלו את פרטי הקשר של הליד ודוח מסכם עם כאבים צרכים ותסריט שיחה של הלקוח. בנוסף תוכלו להעביר את הלידים סדרת חימום על ידי אתגר AI.
               </p>
             </div>
 
             <div className="card" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>כמה זמן לוקח להקים מגנט?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                דקות ספורות! אתם מגדירים נושא, כותבים תיאור קצר ושאלה פותחת - והמערכת עושה את השאר. ה-AI יודע לנהל את השיחה בצורה טבעית.
+                3 דקות! מעלים פוסט שכתבתם או מגדירים נושא וה-AI עושה בשבילך את כל השאר. סקפטי? תפעיל טיימר ותנסה - <Link href="/login" style={{ color: 'var(--primary-start)' }}>התחבר ונסה עכשיו</Link>.
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>זה מסובך??</h3>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                ממש לא! תנסה בעצמך, אם בכל זאת הסתבכת אפשר ליצור איתי קשר ונעשה את זה ביחד: <a href="tel:0525666536" style={{ color: 'var(--primary-start)' }}>052-5666536</a>
               </p>
             </div>
 
             <div className="card" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>האם זה עובד בעברית?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                כן! המערכת תוכננה מהיסוד לעבוד בעברית, כולל תמיכה ב-RTL ובינה מלאכותית שמבינה ומדברת עברית באופן טבעי.
+                בטח! המערכת תוכננה מהיסוד לעבוד בעברית, כולל תמיכה ב-RTL ובינה מלאכותית שמבינה ומדברת עברית באופן טבעי.
               </p>
             </div>
           </div>
