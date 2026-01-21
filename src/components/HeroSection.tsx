@@ -11,10 +11,18 @@ interface Message {
     buttons?: { label: string; value: string }[]
 }
 
+// Helper function to clean markdown formatting (* and #) from text
+const cleanMarkdown = (text: string): string => {
+    return text.replace(/[*#]/g, '')
+}
+
 // Helper function to convert URLs to clickable links
 const linkifyText = (text: string) => {
+    // First clean markdown characters
+    const cleanedText = cleanMarkdown(text)
+
     const urlRegex = /(https?:\/\/[^\s]+)/g
-    const parts = text.split(urlRegex)
+    const parts = cleanedText.split(urlRegex)
 
     return parts.map((part, index) => {
         if (urlRegex.test(part)) {
