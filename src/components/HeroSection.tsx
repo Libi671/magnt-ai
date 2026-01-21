@@ -180,7 +180,7 @@ export default function HeroSection() {
                 height: '4px',
                 background: 'rgba(255, 255, 255, 0.8)',
                 borderRadius: '2px',
-                margin: '30px auto 40px',
+                margin: '20px auto 30px',
                 boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
             }} />
 
