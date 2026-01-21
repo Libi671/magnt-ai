@@ -28,6 +28,8 @@ type WizardStep =
   | 'post_analyzing'
   | 'topic_suggestion'
   | 'topic_manual'
+  | 'description_generating'
+  | 'description_suggestion'
   | 'description_input'
   | 'generating_prompt'
   | 'prompt_suggestion'
@@ -64,6 +66,7 @@ export default function NewTaskPage() {
   const [postContent, setPostContent] = useState('')
   const [suggestedTopic, setSuggestedTopic] = useState('')
   const [suggestedPrompt, setSuggestedPrompt] = useState('')
+  const [suggestedDescription, setSuggestedDescription] = useState('')
   const [currentPath, setCurrentPath] = useState<'post' | 'magnet' | null>(null)
 
   const scrollToBottom = () => {
@@ -105,8 +108,8 @@ export default function NewTaskPage() {
 
 בוא נתחיל! יש לך פוסט קיים שתרצה להוסיף לו מגנט, או שנתחיל מאפס?`,
       [
-        { label: '📱 מתחיל מפוסט קיים', value: 'post' },
-        { label: '✨ מתחיל מהמגנט', value: 'magnet' }
+        { label: '✨ מתחילים מאפס', value: 'magnet' },
+        { label: '📱 מתחילים מפוסט', value: 'post' }
       ]
     )
     setStep('choose_path')
@@ -155,15 +158,20 @@ export default function NewTaskPage() {
       case 'topic_suggestion':
         if (value === 'accept') {
           setTaskData(prev => ({ ...prev, title: suggestedTopic }))
-          addBotMessage(
-            `מצוין! הנושא נשמר: "${suggestedTopic}"
-
-עכשיו תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?`
-          )
-          setStep('description_input')
+          generateDescription(suggestedTopic)
         } else {
           addBotMessage('בסדר, מה הנושא שאתה רוצה למגנט הלידים?')
           setStep('topic_manual')
+        }
+        break
+
+      case 'description_suggestion':
+        if (value === 'accept') {
+          setTaskData(prev => ({ ...prev, description: suggestedDescription }))
+          generatePrompt()
+        } else {
+          addBotMessage('בסדר, תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?')
+          setStep('description_input')
         }
         break
 
@@ -212,12 +220,7 @@ export default function NewTaskPage() {
       case 'topic_manual':
         setTaskData(prev => ({ ...prev, title: userInput }))
         setSuggestedTopic(userInput)
-        addBotMessage(
-          `נהדר! הנושא: "${userInput}"
-
-עכשיו תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?`
-        )
-        setStep('description_input')
+        generateDescription(userInput)
         break
 
       case 'description_input':
@@ -287,6 +290,50 @@ export default function NewTaskPage() {
       console.error('Error analyzing post:', error)
       addBotMessage('שגיאה בניתוח הפוסט. מה הנושא של הפוסט?')
       setStep('topic_manual')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const generateDescription = async (topic: string) => {
+    setLoading(true)
+    setStep('description_generating')
+    addBotMessage('💭 חושב מה המשתמשים יקבלו מהמגנט הזה...')
+
+    try {
+      const response = await fetch('/api/analyze-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_description',
+          topic: topic
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.suggestedDescription) {
+        setSuggestedDescription(data.suggestedDescription)
+        addBotMessage(
+          `הנה הצעה לתיאור מה המשתמשים יקבלו מהמגנט:
+
+"${data.suggestedDescription}"
+
+מה אתה אומר?`,
+          [
+            { label: '✅ מאשר', value: 'accept' },
+            { label: '✏️ אכתוב בעצמי', value: 'manual' }
+          ]
+        )
+        setStep('description_suggestion')
+      } else {
+        addBotMessage('תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?')
+        setStep('description_input')
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      addBotMessage('תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?')
+      setStep('description_input')
     } finally {
       setLoading(false)
     }

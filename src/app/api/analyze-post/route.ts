@@ -110,6 +110,29 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        // Action: generate_description - Generate description of what users will get
+        if (action === 'generate_description') {
+            const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+            const prompt = `בהתבסס על נושא המגנט הבא: "${topic}"
+
+צור תיאור קצר (משפט אחד או שניים) שמתאר מה המשתמש יקבל מהמגנט הזה.
+התיאור צריך להיות ברור, מושך ומדגיש את הערך שהמשתמש יקבל.
+
+לדוגמה:
+- "תקבל מדריך מעשי עם 5 צעדים לכתיבת פוסט ויראלי"
+- "תגלה את הסוד לבניית תוכן שמושך לקוחות איכותיים"
+
+חשוב: החזר רק את התיאור עצמו, בלי הקדמה או הסבר. משפט או שניים בלבד.`
+
+            const result = await model.generateContent(prompt)
+            const suggestedDescription = result.response.text().trim()
+
+            return NextResponse.json({
+                success: true,
+                suggestedDescription
+            })
+        }
+
         // Action: generate_prompt - Generate AI prompt for the bot
         if (action === 'generate_prompt') {
             const { postUrl } = body

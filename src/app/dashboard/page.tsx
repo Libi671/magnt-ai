@@ -71,8 +71,8 @@ export default async function DashboardPage() {
 
               {/* Buttons */}
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button className="btn btn-primary" style={{ pointerEvents: 'none' }}>📱 מתחיל מפוסט קיים</button>
-                <button className="btn btn-secondary" style={{ pointerEvents: 'none' }}>✨ מתחיל מהמגנט</button>
+                <button className="btn btn-primary" style={{ pointerEvents: 'none' }}>✨ מתחילים מאפס</button>
+                <button className="btn btn-secondary" style={{ pointerEvents: 'none' }}>📱 מתחילים מפוסט</button>
               </div>
 
               {/* Input Preview */}

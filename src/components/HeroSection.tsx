@@ -1,31 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 
 const words = ['למגנט לקוחות', 'לממיר']
 
+interface Message {
+    role: 'user' | 'model'
+    content: string
+    buttons?: { label: string; value: string }[]
+}
+
 export default function HeroSection() {
-    const router = useRouter()
     const [currentWordIndex, setCurrentWordIndex] = useState(0)
     const [currentText, setCurrentText] = useState('')
     const [isDeleting, setIsDeleting] = useState(false)
-    const [inputValue, setInputValue] = useState('')
 
+    // Chat state
+    const [messages, setMessages] = useState<Message[]>([])
+    const [input, setInput] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [chatStarted, setChatStarted] = useState(false)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+
+    // Typewriter effect
     useEffect(() => {
         const word = words[currentWordIndex]
 
         const timeout = setTimeout(() => {
             if (!isDeleting) {
-                // Typing
                 if (currentText.length < word.length) {
                     setCurrentText(word.substring(0, currentText.length + 1))
                 } else {
-                    // Wait before deleting
                     setTimeout(() => setIsDeleting(true), 2000)
                 }
             } else {
-                // Deleting
                 if (currentText.length > 0) {
                     setCurrentText(word.substring(0, currentText.length - 1))
                 } else {
@@ -38,9 +47,79 @@ export default function HeroSection() {
         return () => clearTimeout(timeout)
     }, [currentText, isDeleting, currentWordIndex])
 
+    // Initialize chat with first message
+    useEffect(() => {
+        if (!chatStarted) {
+            setMessages([{
+                role: 'model',
+                content: 'היי, כאן היועץ לצמיחה עסקית של Magnt AI. רוצה להפסיק להיות תלוי בחסדי האלגוריתם, ולהשיג הרבה יותר לידים ולהגדיל הכנסה?',
+                buttons: [
+                    { label: 'בטח!', value: 'בטח! אני רוצה להשיג יותר לידים ולהגדיל הכנסה.' },
+                    { label: 'לא כרגע', value: 'לא כרגע, אולי בהמשך.' }
+                ]
+            }])
+            setChatStarted(true)
+        }
+    }, [chatStarted])
+
+    // Scroll to bottom when messages change
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages])
+
+    const sendMessage = async (userMessage: string) => {
+        // Add user message
+        setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+        setLoading(true)
+
+        try {
+            // Prepare history for API (without buttons)
+            const history = messages.map(msg => ({
+                role: msg.role,
+                content: msg.content
+            }))
+
+            const response = await fetch('/api/hero-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMessage,
+                    history
+                })
+            })
+
+            const data = await response.json()
+
+            if (data.response) {
+                setMessages(prev => [...prev, { role: 'model', content: data.response }])
+            } else {
+                setMessages(prev => [...prev, {
+                    role: 'model',
+                    content: 'אופס, משהו השתבש. נסה שוב או התחבר למערכת כדי להמשיך.'
+                }])
+            }
+        } catch (error) {
+            console.error('Chat error:', error)
+            setMessages(prev => [...prev, {
+                role: 'model',
+                content: 'אופס, משהו השתבש. נסה שוב או התחבר למערכת כדי להמשיך.'
+            }])
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleButtonClick = (value: string) => {
+        sendMessage(value)
+    }
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        router.push('/login')
+        if (!input.trim() || loading) return
+
+        const message = input.trim()
+        setInput('')
+        sendMessage(message)
     }
 
     return (
@@ -66,36 +145,114 @@ export default function HeroSection() {
                 ה-AI שלנו ינהל את השיחה, ויביא לך לקוחות חמים לסגירה.
             </p>
 
-            {/* Chat Preview */}
+            {/* Interactive Chat */}
             <div className="hero-chat-preview">
-                <h3 className="hero-chat-title">מוכנים להתחיל לאסוף לידים?</h3>
+                <h3 className="hero-chat-title">🎯 תרגיל אבחון מהיר - גלה את הפוטנציאל שלך</h3>
 
                 <div className="hero-chat-window">
-                    {/* Bot Message */}
-                    <div className="hero-chat-message bot">
-                        <div className="hero-chat-avatar">🤖</div>
-                        <div className="hero-chat-bubble">
-                            <p>רוצה להשיג עוד לידים ולהגדיל הכנסה? נמאס לך להיות תלוי בחסדי האלגוריתם?</p>
-                            <p style={{ marginTop: '12px' }}>יוצרים מגנט AI שיכול להביא לך הרבה לידים!</p>
-                            <p style={{ marginTop: '12px' }}>באיזה נושא תרצה לכתוב את המגנט?</p>
-                            <p style={{ marginTop: '8px', fontSize: '0.85rem', opacity: 0.8 }}>(אפשר לכתוב את הנושא של הפוסט האחרון שכתבת בפייסבוק או נושא אחר)</p>
-                        </div>
+                    {/* Messages */}
+                    <div className="hero-chat-messages" style={{
+                        maxHeight: '350px',
+                        overflowY: 'auto',
+                        padding: '16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px'
+                    }}>
+                        {messages.map((msg, index) => (
+                            <div key={index} style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: msg.role === 'user' ? 'flex-start' : 'flex-end'
+                            }}>
+                                {/* Message bubble */}
+                                <div className={`hero-chat-message ${msg.role === 'user' ? 'user' : 'bot'}`}>
+                                    {msg.role === 'model' && <div className="hero-chat-avatar">🤖</div>}
+                                    <div className="hero-chat-bubble" style={{
+                                        background: msg.role === 'user'
+                                            ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                                            : 'rgba(40, 40, 55, 0.9)',
+                                        borderRadius: msg.role === 'user' ? '18px 18px 18px 4px' : '18px 18px 4px 18px',
+                                        whiteSpace: 'pre-wrap'
+                                    }}>
+                                        <p>{msg.content}</p>
+                                    </div>
+                                </div>
+
+                                {/* Buttons (if any) */}
+                                {msg.buttons && msg.buttons.length > 0 && index === messages.length - 1 && !loading && (
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '10px',
+                                        marginTop: '12px',
+                                        justifyContent: 'flex-end'
+                                    }}>
+                                        {msg.buttons.map((btn, btnIndex) => (
+                                            <button
+                                                key={btnIndex}
+                                                onClick={() => handleButtonClick(btn.value)}
+                                                className="btn"
+                                                style={{
+                                                    padding: '10px 20px',
+                                                    background: btnIndex === 0
+                                                        ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                                                        : 'rgba(255,255,255,0.1)',
+                                                    border: btnIndex === 0 ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                                                    borderRadius: '20px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.9rem'
+                                                }}
+                                            >
+                                                {btn.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {/* Loading indicator */}
+                        {loading && (
+                            <div className="hero-chat-message bot">
+                                <div className="hero-chat-avatar">🤖</div>
+                                <div className="hero-chat-bubble" style={{
+                                    background: 'rgba(40, 40, 55, 0.9)',
+                                    display: 'flex',
+                                    gap: '6px',
+                                    padding: '16px 20px'
+                                }}>
+                                    <span className="typing-dot"></span>
+                                    <span className="typing-dot"></span>
+                                    <span className="typing-dot"></span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div ref={messagesEndRef} />
                     </div>
 
                     {/* Input */}
                     <form onSubmit={handleSubmit} className="hero-chat-input">
                         <input
                             type="text"
-                            placeholder="כתוב את הנושא שלך..."
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder="כתוב את התשובה שלך..."
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            disabled={loading}
                         />
-                        <button type="submit">
+                        <button type="submit" disabled={loading || !input.trim()}>
                             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path d="M12 19l-7-7 7-7M19 12H5" />
                             </svg>
                         </button>
                     </form>
+                </div>
+
+                {/* CTA Button */}
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                    <Link href="/login" className="btn btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
+                        התחבר וצור את המגנט שלך בחינם →
+                    </Link>
                 </div>
 
                 {/* Trust Badges */}
