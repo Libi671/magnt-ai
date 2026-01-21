@@ -57,7 +57,8 @@ export default async function LandingPage() {
         <div className="container">
           <h2 className="section-title">איך זה עובד?</h2>
           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '-20px', marginBottom: '40px' }}>
-            יוצרים מגנט ⬅ מקבלים לידים, יוצרים אתגר ⬅ משיגים לקוחות.
+            יוצרים מגנט ⬅ מקבלים לידים,<br />
+            יוצרים אתגר ⬅ משיגים לקוחות.
           </p>
 
           <div className="steps-grid">
@@ -181,7 +182,8 @@ export default async function LandingPage() {
             <div className="card" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>זה מסובך??</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                ממש לא! תנסה בעצמך, אם בכל זאת הסתבכת אפשר ליצור איתי קשר ונעשה את זה ביחד: <a href="tel:0525666536" style={{ color: 'var(--primary-start)' }}>052-5666536</a>
+                ממש לא! תנסה בעצמך, אם בכל זאת הסתבכת אפשר ליצור איתי קשר ונעשה את זה ביחד:<br />
+                <a href="tel:0525666536" style={{ color: 'var(--primary-start)' }}>052-5666536 (אליסף)</a>
               </p>
             </div>
 
@@ -224,6 +226,51 @@ export default async function LandingPage() {
               <br /><br />
               <strong style={{ color: 'var(--text-primary)' }}>אני משוכנע שהיא תעזור גם לך.</strong>
             </p>
+
+            {/* Contact Icons */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '24px' }}>
+              <a href="tel:0525666536" title="שיחה" style={{
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: 'rgba(102, 126, 234, 0.2)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', color: 'var(--primary-start)',
+                transition: 'background 0.3s'
+              }}>
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                </svg>
+              </a>
+              <a href="https://wa.me/972525666536" target="_blank" rel="noopener noreferrer" title="ווטסאפ" style={{
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: 'rgba(37, 211, 102, 0.2)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', color: '#25D366',
+                transition: 'background 0.3s'
+              }}>
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                  <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.34 5L2 22l5.16-1.34C8.62 21.51 10.27 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.58 0-3.07-.41-4.37-1.12l-.31-.18-3.24.84.86-3.15-.2-.32A7.963 7.963 0 014 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z" />
+                </svg>
+              </a>
+              <a href="mailto:libi41@gmail.com" title="אימייל" style={{
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: 'rgba(102, 126, 234, 0.2)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', color: 'var(--primary-start)',
+                transition: 'background 0.3s'
+              }}>
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                </svg>
+              </a>
+              <a href="https://calendar.app.google/73nkXWeKk2EhtrpB6" target="_blank" rel="noopener noreferrer" title="קבע פגישה" style={{
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: 'rgba(245, 87, 108, 0.2)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', color: '#f5576c',
+                transition: 'background 0.3s'
+              }}>
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -232,7 +279,7 @@ export default async function LandingPage() {
       <section className="section">
         <div className="container">
           <div className="card cta-card">
-            <h2>הגיע הזמן להפוך תוכן להכנסה</h2>
+            <h2>הגיע הזמן שלך להפוך למגנט של לקוחות ועסקאות</h2>
             <p>הצטרפו לאלפי יוצרים שכבר משתמשים ב-Magnt.AI</p>
             <Link href="/login" className="btn btn-primary btn-large">
               התחילו בחינם עכשיו

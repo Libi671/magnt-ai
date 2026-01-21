@@ -38,12 +38,15 @@ export default function PricingSection() {
                             background: 'rgba(34, 197, 94, 0.1)',
                             padding: '16px',
                             borderRadius: 'var(--radius-md)',
-                            marginBottom: '24px'
+                            marginBottom: '16px'
                         }}>
                             <p style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>מתחילים בחינם:</p>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '12px' }}>
                                 ✅ מגנטים ללא הגבלה  ✅ עד 25 לידים  ✅ צ׳אט AI מתקדם
                             </p>
+                            <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>
+                                מתחילים בחינם עכשיו!
+                            </Link>
                         </div>
 
                         {/* Buttons */}
@@ -224,7 +227,7 @@ export default function PricingSection() {
                                     className="btn btn-primary"
                                     style={{ width: '100%', textAlign: 'center', display: 'block' }}
                                 >
-                                    קדימה בוא נדבר על זה →
+                                    ← קדימה בוא נדבר על זה
                                 </a>
                             </div>
                         </div>
