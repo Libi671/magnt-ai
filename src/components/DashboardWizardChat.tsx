@@ -523,8 +523,37 @@ ${data.facebookPost}
                 display: 'flex',
                 gap: '24px',
                 flexWrap: 'wrap',
-                transition: 'all 0.4s ease-in-out'
+                transition: 'all 0.4s ease-in-out',
+                alignItems: 'flex-start'
             }}>
+                {/* Avatar - show only before conversation starts */}
+                {!showSummary && (
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                    }}>
+                        <div style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: '3px solid rgba(102, 126, 234, 0.5)',
+                            boxShadow: '0 0 20px rgba(102, 126, 234, 0.3)'
+                        }}>
+                            <img
+                                src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/R1Qb57WwXsoLOwTIfPuf/%D7%A7%D7%95%D7%A4%D7%A8%D7%99%D7%98%D7%A8%20%D7%A9%D7%9C%20WAMAGNT%20(400%20x%20400%20%D7%A4%D7%99%D7%A7%D7%A1%D7%9C).png"
+                                alt="Magnt AI Bot"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
                 {/* Chat Column */}
                 <div
                     className="card wizard-chat-card"

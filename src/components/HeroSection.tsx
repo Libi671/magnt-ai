@@ -222,7 +222,10 @@ export default function HeroSection() {
             <div className="hero-chat-preview">
                 <h3 className="hero-chat-title">🎯 הדגמה חיה: גלה איך להפוך למגנט של לקוחות ועסקאות</h3>
 
-                <div className="hero-chat-window">
+                <div className="hero-chat-window" style={{
+                    boxShadow: '0 0 40px rgba(102, 126, 234, 0.3), 0 0 80px rgba(102, 126, 234, 0.15)',
+                    border: '1px solid rgba(102, 126, 234, 0.3)'
+                }}>
                     {/* Messages */}
                     <div
                         ref={chatContainerRef}
@@ -275,7 +278,7 @@ export default function HeroSection() {
                                                         ? 'linear-gradient(135deg, #667eea, #764ba2)'
                                                         : 'rgba(255,255,255,0.1)',
                                                     border: btnIndex === 0 ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                                                    borderRadius: '20px',
+                                                    borderRadius: '8px',
                                                     cursor: 'pointer',
                                                     fontSize: '0.9rem'
                                                 }}
