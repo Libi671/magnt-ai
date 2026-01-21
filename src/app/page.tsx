@@ -152,8 +152,8 @@ export default async function LandingPage() {
       {/* Pricing Section */}
       <PricingSection />
 
-      {/* FAQ Section - Dark */}
-      <section id="faq" className="section">
+      {/* FAQ Section - Light */}
+      <section id="faq" className="section" style={{ background: 'var(--bg-glass)' }}>
         <div className="container">
           <h2 className="section-title">שאלות נפוצות ❓</h2>
 
@@ -197,8 +197,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* About Me Section - Light */}
-      <section id="about-me" className="section" style={{ background: 'var(--bg-glass)' }}>
+      {/* About Me Section - Dark */}
+      <section id="about-me" className="section">
         <div className="container">
           <h2 className="section-title">עלי 👋</h2>
 
@@ -275,8 +275,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA - Dark */}
-      <section className="section">
+      {/* Final CTA - Light */}
+      <section className="section" style={{ background: 'var(--bg-glass)' }}>
         <div className="container">
           <div className="card cta-card">
             <h2>הגיע הזמן שלך להפוך למגנט של לקוחות ועסקאות</h2>
