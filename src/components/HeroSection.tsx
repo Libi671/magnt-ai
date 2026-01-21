@@ -11,6 +11,33 @@ interface Message {
     buttons?: { label: string; value: string }[]
 }
 
+// Helper function to convert URLs to clickable links
+const linkifyText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const parts = text.split(urlRegex)
+
+    return parts.map((part, index) => {
+        if (urlRegex.test(part)) {
+            return (
+                <a
+                    key={index}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: '#667eea',
+                        textDecoration: 'underline',
+                        fontWeight: 600
+                    }}
+                >
+                    {part}
+                </a>
+            )
+        }
+        return part
+    })
+}
+
 export default function HeroSection() {
     const [currentWordIndex, setCurrentWordIndex] = useState(0)
     const [currentText, setCurrentText] = useState('')
@@ -181,7 +208,7 @@ export default function HeroSection() {
                                         borderRadius: msg.role === 'user' ? '18px 18px 18px 4px' : '18px 18px 4px 18px',
                                         whiteSpace: 'pre-wrap'
                                     }}>
-                                        <p>{msg.content}</p>
+                                        <p>{linkifyText(msg.content)}</p>
                                     </div>
                                 </div>
 
