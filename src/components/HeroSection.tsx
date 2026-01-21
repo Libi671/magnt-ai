@@ -21,7 +21,7 @@ export default function HeroSection() {
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
     const [chatStarted, setChatStarted] = useState(false)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const chatContainerRef = useRef<HTMLDivElement>(null)
 
     // Typewriter effect
     useEffect(() => {
@@ -62,10 +62,12 @@ export default function HeroSection() {
         }
     }, [chatStarted])
 
-    // Scroll to bottom when messages change
+    // Scroll to bottom when messages change (only within chat container)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages])
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+        }
+    }, [messages, loading])
 
     const sendMessage = async (userMessage: string) => {
         // Add user message
@@ -151,14 +153,18 @@ export default function HeroSection() {
 
                 <div className="hero-chat-window">
                     {/* Messages */}
-                    <div className="hero-chat-messages" style={{
-                        maxHeight: '350px',
-                        overflowY: 'auto',
-                        padding: '16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px'
-                    }}>
+                    <div
+                        ref={chatContainerRef}
+                        className="hero-chat-messages"
+                        style={{
+                            maxHeight: '350px',
+                            overflowY: 'auto',
+                            padding: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px'
+                        }}
+                    >
                         {messages.map((msg, index) => (
                             <div key={index} style={{
                                 display: 'flex',
@@ -227,8 +233,6 @@ export default function HeroSection() {
                                 </div>
                             </div>
                         )}
-
-                        <div ref={messagesEndRef} />
                     </div>
 
                     {/* Input */}
