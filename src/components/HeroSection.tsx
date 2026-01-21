@@ -166,7 +166,7 @@ export default function HeroSection() {
                 </span>
             </h1>
 
-            <p className="hero-subtitle">
+            <p className="hero-subtitle" style={{ marginBottom: '15px' }}>
                 נמאס לך להשקיע בתוכן ולקבל &apos;לייקים&apos; במקום לקוחות?
                 <br />
                 יוצרים מגנט ויראלי ואוספים לידים במינימום מאמץ.
@@ -180,7 +180,7 @@ export default function HeroSection() {
                 height: '4px',
                 background: 'rgba(255, 255, 255, 0.8)',
                 borderRadius: '2px',
-                margin: '20px auto 30px',
+                margin: '10px auto 25px',
                 boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
             }} />
 
