@@ -10,8 +10,8 @@ export default function PricingSection() {
 
     return (
         <>
-            {/* Pricing Section - Light */}
-            <section id="pricing" className="section" style={{ background: 'var(--bg-glass)' }}>
+            {/* Pricing Section - Dark */}
+            <section id="pricing" className="section">
                 <div className="container">
                     <h2 className="section-title">תמחור 💳</h2>
 
