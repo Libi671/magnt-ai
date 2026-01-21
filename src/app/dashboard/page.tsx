@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import EditTaskButton from '@/components/EditTaskButton'
+import DashboardWizardChat from '@/components/DashboardWizardChat'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -41,59 +42,8 @@ export default async function DashboardPage() {
         <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginTop: '8px' }}>נהפוך את הפוסט שלך למגנט לקוחות ועסקאות</p>
       </div>
 
-      {/* Task Creator Chat Preview - with glow background section */}
-      <div style={{
-        background: 'linear-gradient(180deg, rgba(20, 20, 28, 1) 0%, rgba(30, 32, 44, 1) 100%)',
-        padding: '40px 20px',
-        borderRadius: '24px',
-        marginBottom: '60px',
-        position: 'relative'
-      }}>
-        <Link href="/dashboard/tasks/new" style={{ textDecoration: 'none' }}>
-          <div className="card dashboard-chat-card" style={{
-            padding: '32px',
-            cursor: 'pointer',
-            boxShadow: '0 0 40px rgba(102, 126, 234, 0.3), 0 0 80px rgba(102, 126, 234, 0.15)',
-            border: '1px solid rgba(102, 126, 234, 0.3)'
-          }}>
-            {/* Chat Preview */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Bot Message */}
-              <div className="chat-message bot" style={{ maxWidth: '100%', alignSelf: 'flex-end', color: 'white' }}>
-                <div>שלום 🤖</div>
-                <div style={{ marginTop: '8px' }}>אני כאן לעזור לך להפוך את הפוסט שלך למגנט לידים</div>
-                <div style={{ marginTop: '8px', fontSize: '0.9rem', opacity: 0.9 }}>
-                  מגנט לידים הוא כלי חכם שעובד דרך האתר או הרשתות החברתיות שלך.
-                  מפרסמים אותו באתר, מתחת פוסט שלך או כפוסט חדש, כשמישהו לוחץ על הקישור - הוא מקבל חוויה אינטראקטיבית, ואתה מקבל את הפרטים שלו + מידע עמוק מהשיחה.
-                </div>
-                <div style={{ marginTop: '12px', fontWeight: 500 }}>בוא נתחיל! יש לך פוסט קיים שתרצה להוסיף לו מגנט, או שנתחיל מאפס?</div>
-              </div>
-
-              {/* Buttons */}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button className="btn btn-primary" style={{ pointerEvents: 'none' }}>✨ מתחילים מאפס</button>
-                <button className="btn btn-secondary" style={{ pointerEvents: 'none' }}>📱 מתחילים מפוסט</button>
-              </div>
-
-              {/* Input Preview */}
-              <div style={{ display: 'flex', gap: '12px', opacity: 0.6 }}>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="כתוב תשובה..."
-                  disabled
-                  style={{ flex: 1 }}
-                />
-                <button className="btn btn-primary" disabled>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M12 19l-7-7 7-7M19 12H5" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </Link>
-      </div>
+      {/* Interactive Wizard Chat */}
+      <DashboardWizardChat />
 
       {/* Stats Cards - different background section */}
       <div style={{
