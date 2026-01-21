@@ -217,8 +217,8 @@ export default function HeroSection() {
                                         display: 'flex',
                                         gap: '10px',
                                         marginTop: '12px',
-                                        marginRight: '44px',
-                                        justifyContent: 'flex-start'
+                                        alignSelf: 'flex-end',
+                                        paddingLeft: '44px'
                                     }}>
                                         {msg.buttons.map((btn, btnIndex) => (
                                             <button
