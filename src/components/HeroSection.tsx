@@ -174,9 +174,19 @@ export default function HeroSection() {
                 ה-AI שלנו ינהל את השיחה, ויביא לך לקוחות חמים לסגירה.
             </p>
 
+            {/* Separator Line */}
+            <div style={{
+                width: '60px',
+                height: '4px',
+                background: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '2px',
+                margin: '30px auto 40px',
+                boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
+            }} />
+
             {/* Interactive Chat */}
             <div className="hero-chat-preview">
-                <h3 className="hero-chat-title">🎯 תרגיל אבחון מהיר - גלה את הפוטנציאל שלך</h3>
+                <h3 className="hero-chat-title">🎯 הדגמה חיה: גלה איך להפוך למגנט של לקוחות ועסקאות</h3>
 
                 <div className="hero-chat-window">
                     {/* Messages */}
@@ -281,7 +291,7 @@ export default function HeroSection() {
 
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                     <Link href="/login" className="btn btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
-                        התחבר וצור את המגנט שלך בחינם
+                        צור מגנט כמו זה בחינם
                     </Link>
                 </div>
 
