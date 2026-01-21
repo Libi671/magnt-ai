@@ -247,7 +247,15 @@ export default function HeroSection() {
                             }}>
                                 {/* Message bubble */}
                                 <div className={`hero-chat-message ${msg.role === 'user' ? 'user' : 'bot'}`}>
-                                    {msg.role === 'model' && <div className="hero-chat-avatar">🤖</div>}
+                                    {msg.role === 'model' && (
+                                        <div className="hero-chat-avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                                            <img
+                                                src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/R1Qb57WwXsoLOwTIfPuf/%D7%A7%D7%95%D7%A4%D7%A8%D7%99%D7%98%D7%A8%20%D7%A9%D7%9C%20WAMAGNT%20(400%20x%20400%20%D7%A4%D7%99%D7%A7%D7%A1%D7%9C).png"
+                                                alt="Bot"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        </div>
+                                    )}
                                     <div className="hero-chat-bubble" style={{
                                         background: msg.role === 'user'
                                             ? 'linear-gradient(135deg, #667eea, #764ba2)'
@@ -294,7 +302,13 @@ export default function HeroSection() {
                         {/* Loading indicator */}
                         {loading && (
                             <div className="hero-chat-message bot">
-                                <div className="hero-chat-avatar">🤖</div>
+                                <div className="hero-chat-avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                                    <img
+                                        src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/R1Qb57WwXsoLOwTIfPuf/%D7%A7%D7%95%D7%A4%D7%A8%D7%99%D7%98%D7%A8%20%D7%A9%D7%9C%20WAMAGNT%20(400%20x%20400%20%D7%A4%D7%99%D7%A7%D7%A1%D7%9C).png"
+                                        alt="Bot"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                </div>
                                 <div className="hero-chat-bubble" style={{
                                     background: 'rgba(40, 40, 55, 0.9)',
                                     display: 'flex',

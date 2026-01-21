@@ -526,34 +526,6 @@ ${data.facebookPost}
                 transition: 'all 0.4s ease-in-out',
                 alignItems: 'flex-start'
             }}>
-                {/* Avatar - show only before conversation starts */}
-                {!showSummary && (
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                    }}>
-                        <div style={{
-                            width: '120px',
-                            height: '120px',
-                            borderRadius: '50%',
-                            overflow: 'hidden',
-                            border: '3px solid rgba(102, 126, 234, 0.5)',
-                            boxShadow: '0 0 20px rgba(102, 126, 234, 0.3)'
-                        }}>
-                            <img
-                                src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/R1Qb57WwXsoLOwTIfPuf/%D7%A7%D7%95%D7%A4%D7%A8%D7%99%D7%98%D7%A8%20%D7%A9%D7%9C%20WAMAGNT%20(400%20x%20400%20%D7%A4%D7%99%D7%A7%D7%A1%D7%9C).png"
-                                alt="Magnt AI Bot"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
                 {/* Chat Column */}
                 <div
                     className="card wizard-chat-card"
@@ -565,9 +537,35 @@ ${data.facebookPost}
                         boxShadow: '0 0 40px rgba(102, 126, 234, 0.3), 0 0 80px rgba(102, 126, 234, 0.15)',
                         border: '1px solid rgba(102, 126, 234, 0.3)',
                         transition: 'all 0.4s ease-in-out',
-                        maxHeight: '550px'
+                        maxHeight: '550px',
+                        position: 'relative'
                     }}
                 >
+                    {/* Avatar - top right corner outside the box */}
+                    {!showSummary && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '-60px',
+                            right: '-10px',
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: '3px solid rgba(102, 126, 234, 0.5)',
+                            boxShadow: '0 0 20px rgba(102, 126, 234, 0.3)',
+                            zIndex: 10
+                        }}>
+                            <img
+                                src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/R1Qb57WwXsoLOwTIfPuf/%D7%A7%D7%95%D7%A4%D7%A8%D7%99%D7%98%D7%A8%20%D7%A9%D7%9C%20WAMAGNT%20(400%20x%20400%20%D7%A4%D7%99%D7%A7%D7%A1%D7%9C).png"
+                                alt="Magnt AI Bot"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }}
+                            />
+                        </div>
+                    )}
                     {/* Chat Messages */}
                     <div
                         ref={chatContainerRef}
@@ -594,7 +592,7 @@ ${data.facebookPost}
                                         gap: '8px',
                                         marginBottom: showSummary ? '16px' : '8px',
                                         justifyContent: 'flex-end',
-                                        maxWidth: showSummary ? '80%' : '100%',
+                                        maxWidth: '80%',
                                         marginLeft: 'auto'
                                     }}>
                                         {msg.buttons.map((btn, btnIndex) => (
@@ -602,7 +600,7 @@ ${data.facebookPost}
                                                 key={btnIndex}
                                                 onClick={() => handleButtonClick(btn.value)}
                                                 className={btnIndex === 0 ? 'btn btn-primary' : 'btn btn-secondary'}
-                                                style={{ padding: '10px 16px', fontSize: '0.9rem', flex: 1 }}
+                                                style={{ padding: '10px 20px', fontSize: '0.9rem' }}
                                                 disabled={loading}
                                             >
                                                 {btn.label}
