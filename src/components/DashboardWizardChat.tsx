@@ -514,7 +514,7 @@ ${data.facebookPost}
     return (
         <div style={{
             background: 'linear-gradient(180deg, rgba(20, 20, 28, 1) 0%, rgba(30, 32, 44, 1) 100%)',
-            padding: '40px 20px',
+            padding: showSummary ? '40px 20px' : '40px 10px',
             borderRadius: '24px',
             marginBottom: '60px',
             position: 'relative'
@@ -563,9 +563,9 @@ ${data.facebookPost}
                                     <div style={{
                                         display: 'flex',
                                         gap: '8px',
-                                        marginBottom: '16px',
+                                        marginBottom: showSummary ? '16px' : '8px',
                                         justifyContent: 'flex-end',
-                                        maxWidth: '80%',
+                                        maxWidth: showSummary ? '80%' : '100%',
                                         marginLeft: 'auto'
                                     }}>
                                         {msg.buttons.map((btn, btnIndex) => (
