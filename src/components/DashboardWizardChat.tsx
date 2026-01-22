@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface Message {
     role: 'bot' | 'user' | 'system'
@@ -69,6 +70,10 @@ export default function DashboardWizardChat() {
     const [suggestedDescription, setSuggestedDescription] = useState('')
     const [currentPath, setCurrentPath] = useState<'post' | 'magnet' | null>(null)
 
+    // Success Modal State
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [createdTask, setCreatedTask] = useState<{ id: string, title: string } | null>(null)
+
     const scrollToBottom = () => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
@@ -93,9 +98,11 @@ export default function DashboardWizardChat() {
 
     // Track if initialized
     const initialized = useRef(false)
+    const [mounted, setMounted] = useState(false)
 
     // Initialize chat
     useEffect(() => {
+        setMounted(true)
         if (initialized.current) return
         initialized.current = true
 
@@ -480,7 +487,7 @@ ${data.facebookPost}
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('tasks')
                 .insert({
                     title: taskData.title,
@@ -492,16 +499,18 @@ ${data.facebookPost}
                     notify_email: taskData.notify_email || user?.email || null,
                     user_id: user?.id,
                 })
+                .select()
+                .single()
 
             if (error) throw error
 
-            addBotMessage('🎉 המגנט נוצר בהצלחה! מעביר אותך לרשימת המשימות...')
+            addBotMessage('🎉 המגנט נוצר בהצלחה!')
             setStep('done')
 
-            setTimeout(() => {
-                router.push('/dashboard/tasks')
-                router.refresh()
-            }, 1500)
+            if (data) {
+                setCreatedTask({ id: data.id, title: data.title })
+                setShowSuccessModal(true)
+            }
         } catch (error) {
             console.error('Error creating task:', error)
             addBotMessage('שגיאה ביצירת המשימה. נסה שוב.')
@@ -509,6 +518,12 @@ ${data.facebookPost}
         } finally {
             setLoading(false)
         }
+    }
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('הקישור הועתק ללוח!')
+        })
     }
 
     return (
@@ -781,6 +796,76 @@ ${data.facebookPost}
                     </div>
                 </div>
             </div>
-        </div>
+            {/* Success Modal */}
+            {
+                showSuccessModal && createdTask && mounted && createPortal(
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        backdropFilter: 'blur(5px)',
+                        padding: '20px'
+                    }}>
+                        <div className="card" style={{ maxWidth: '500px', width: '100%', padding: '32px', textAlign: 'center', position: 'relative' }}>
+                            <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '8px' }}>המגנט מוכן!</h2>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
+                                עכשיו, כדי שזה יעבוד - עליך לצרף את הקישור לפוסט שלך.
+                            </p>
+
+                            <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', direction: 'ltr', textAlign: 'left', fontFamily: 'monospace', color: 'var(--primary-light)' }}>
+                                    {`${window.location.origin}/t/${createdTask.id}`}
+                                </div>
+                                <button
+                                    onClick={() => copyToClipboard(`${window.location.origin}/t/${createdTask.id}`)}
+                                    className="btn btn-secondary"
+                                    style={{ whiteSpace: 'nowrap' }}
+                                >
+                                    העתק קישור 📋
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+                                <a
+                                    href={`https://wa.me/?text=${encodeURIComponent(`הכנתי לכם הפתעה! 🎁\nכנסו לקישור וגלו:\n${window.location.origin}/t/${createdTask.id}`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn"
+                                    style={{ background: '#25D366', color: 'white', justifyContent: 'center' }}
+                                >
+                                    שתף בווטסאפ 📱
+                                </a>
+                                <a
+                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/t/${createdTask.id}`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn"
+                                    style={{ background: '#1877F2', color: 'white', justifyContent: 'center' }}
+                                >
+                                    שתף בפייסבוק 👍
+                                </a>
+                            </div>
+
+                            <button
+                                onClick={() => router.push('/dashboard/tasks')}
+                                className="btn btn-primary btn-large"
+                                style={{ width: '100%' }}
+                            >
+                                מעולה, הבנתי! עבור ללוח הבקרה
+                            </button>
+                        </div>
+                    </div>,
+                    document.body
+                )
+            }
+        </div >
     )
 }

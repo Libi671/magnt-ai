@@ -38,7 +38,6 @@ export default async function LandingPage() {
 
         <nav className="landing-nav">
           <a href="#how" className="landing-nav-link">איך זה עובד</a>
-          <a href="#feed" className="landing-nav-link">משימות</a>
           <a href="#pricing" className="landing-nav-link">תמחור</a>
           <a href="#faq" className="landing-nav-link">שאלות נפוצות</a>
           <a href="#about-me" className="landing-nav-link">עלי</a>

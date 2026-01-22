@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import CopyLinkButton from '@/components/CopyLinkButton'
+import ShareButton from '@/components/ShareButton'
 import EditTaskButton from '@/components/EditTaskButton'
 
 export default async function TasksPage() {
@@ -38,9 +38,6 @@ export default async function TasksPage() {
             <div key={task.id} className="card" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{task.title}</h3>
-                <span className={`badge ${task.is_public ? 'badge-success' : 'badge-warning'}`}>
-                  {task.is_public ? 'ציבורי' : 'טיוטה'}
-                </span>
               </div>
 
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px', lineHeight: 1.5 }}>
@@ -64,7 +61,12 @@ export default async function TasksPage() {
                   >
                     צפה
                   </Link>
-                  <CopyLinkButton taskId={task.id} />
+                  <ShareButton
+                    taskId={task.id}
+                    title={task.title}
+                    className="btn btn-accent"
+                    style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                  />
                 </div>
               </div>
             </div>
