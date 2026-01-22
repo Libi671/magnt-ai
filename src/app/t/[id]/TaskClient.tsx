@@ -51,6 +51,9 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   const [firstBotResponseReceived, setFirstBotResponseReceived] = useState(false)
   const [pendingBotResponse, setPendingBotResponse] = useState<string | null>(null)
   const [firstBotResponse, setFirstBotResponse] = useState<string | null>(null)
+  const [emailSent, setEmailSent] = useState(false)
+  const lastActivityRef = useRef<number>(Date.now())
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -119,6 +122,119 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
     }
     return lead
   }
+
+  // Save full chat to database
+  const saveFullChat = async (updatedMessages: Message[], currentLeadId: string) => {
+    if (!currentLeadId) return
+    const supabase = createClient()
+    const chatMessages = updatedMessages.filter(m => m.role !== 'system')
+
+    await supabase
+      .from('conversations')
+      .upsert({
+        lead_id: currentLeadId,
+        full_chat: chatMessages,
+        is_public: false,
+      }, {
+        onConflict: 'lead_id'
+      })
+  }
+
+  // Refs to avoid stale closures
+  const leadIdRef = useRef<string | null>(null)
+  const emailSentRef = useRef(false)
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    leadIdRef.current = leadId
+  }, [leadId])
+
+  useEffect(() => {
+    emailSentRef.current = emailSent
+  }, [emailSent])
+
+  // Send lead notification email
+  const sendLeadEmail = () => {
+    const currentLeadId = leadIdRef.current
+    if (!currentLeadId || emailSentRef.current) return
+
+    emailSentRef.current = true
+    setEmailSent(true)
+
+    try {
+      console.log('🚀 [Client] Sending lead email request for:', currentLeadId)
+
+      // Use sendBeacon for reliability when page is closing
+      if (navigator.sendBeacon) {
+        console.log('📡 [Client] Using navigator.sendBeacon')
+        const blob = new Blob([JSON.stringify({ leadId: currentLeadId })], { type: 'application/json' });
+        const success = navigator.sendBeacon('/api/send-lead-email', blob);
+        console.log('📡 [Client] sendBeacon result:', success)
+      } else {
+        console.log('📡 [Client] Using fetch (fallback)')
+        fetch('/api/send-lead-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leadId: currentLeadId }),
+          keepalive: true
+        }).then(res => {
+          console.log('✅ [Client] Email API response status:', res.status)
+          res.text().then(t => console.log('📄 [Client] Response:', t))
+        }).catch(err => console.error('❌ [Client] Fetch error:', err))
+      }
+    } catch (error) {
+      console.error('❌ [Client] Error calling sendLeadEmail:', error)
+    }
+  }
+
+  // Detect page leave/abandonment
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      sendLeadEmail()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && leadIdRef.current && !emailSentRef.current) {
+        // User switched to another tab - send email after a short delay
+        setTimeout(() => {
+          if (document.hidden) {
+            sendLeadEmail()
+          }
+        }, 5000) // Wait 5 seconds to confirm they really left
+      }
+    }
+
+    // Set up inactivity timer (2 minutes)
+    const resetInactivityTimer = () => {
+      lastActivityRef.current = Date.now()
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current)
+      }
+      inactivityTimerRef.current = setTimeout(() => {
+        if (leadIdRef.current && !emailSentRef.current) {
+          console.log('Inactivity timeout - sending email')
+          sendLeadEmail()
+        }
+      }, 2 * 60 * 1000) // 2 minutes
+    }
+
+    resetInactivityTimer()
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('mousemove', resetInactivityTimer)
+    window.addEventListener('keydown', resetInactivityTimer)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('mousemove', resetInactivityTimer)
+      window.removeEventListener('keydown', resetInactivityTimer)
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current)
+      }
+    }
+  }, []) // Empty deps - uses refs instead
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -220,7 +336,10 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         } else if (collectionStep !== 'done' && collectionStep !== 'none') {
           setPendingBotResponse(data.response)
         } else {
+          const newMessages = [...messages, { role: 'user' as const, content: userMessage }, { role: 'model' as const, content: data.response }]
           setMessages(prev => [...prev, { role: 'model', content: data.response }])
+          // Save full chat after each message
+          if (leadId) saveFullChat(newMessages, leadId)
         }
       }
     } catch (error) {
@@ -239,6 +358,8 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         .update({ rating })
         .eq('id', leadId)
     }
+    // Send email when user completes
+    sendLeadEmail()
     setCompleted(true)
   }
 
@@ -402,6 +523,50 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
       flexDirection: 'column',
       background: 'var(--gradient-dark)'
     }}>
+      {/* 🛠️ DEBUG BUTTON - REMOVE LATER */}
+      <div style={{
+        position: 'fixed',
+        top: '20px',
+        left: '20px',
+        zIndex: 9999,
+        background: 'rgba(120, 0, 0, 0.9)',
+        padding: '10px',
+        borderRadius: '8px',
+        border: '1px solid red',
+        color: 'white',
+        fontSize: '12px',
+        maxWidth: '200px'
+      }}>
+        <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>🐞 דיבוג אימייל</p>
+        <p>Lead ID: {leadId ? 'V' : 'X'}</p>
+        <p>Sent: {emailSent ? 'Yes' : 'No'}</p>
+        <button
+          onClick={() => {
+            if (!leadId) {
+              alert('⚠️ אין ליד עדיין! תתחיל שיחה והזן פרטים');
+              return;
+            }
+            alert('🚀 מנסה לשלוח אימייל... בדוק את ה-Console (F12)');
+            // Reset flags to force send
+            emailSentRef.current = false;
+            setEmailSent(false);
+            setTimeout(() => sendLeadEmail(), 100);
+          }}
+          style={{
+            marginTop: '8px',
+            background: '#ff0000',
+            color: 'white',
+            border: 'none',
+            padding: '5px 10px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            width: '100%',
+            fontWeight: 'bold'
+          }}
+        >
+          שלח אימייל ידנית
+        </button>
+      </div>
       {/* Header with Creator and Title */}
       <div style={{
         textAlign: 'center',

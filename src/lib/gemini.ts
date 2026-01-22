@@ -69,3 +69,57 @@ export async function summarizeConversation(
 
   return result.response.text();
 }
+
+export interface LeadAnalysis {
+  summary: string;
+  pains: string[];
+  benefits: string[];
+  salesScript: string;
+}
+
+export async function analyzeLeadConversation(
+  history: Message[]
+): Promise<LeadAnalysis> {
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+  const conversationText = history
+    .map((msg) => `${msg.role === "user" ? "משתמש" : "בוט"}: ${msg.content}`)
+    .join("\n");
+
+  const prompt = `נתח את השיחה הבאה בין בוט מכירות ללקוח פוטנציאלי.
+
+השיחה:
+${conversationText}
+
+החזר תשובה בפורמט JSON בלבד (בלי markdown, בלי \`\`\`):
+{
+  "summary": "סיכום קצר של מה הלקוח סיפר וענה באתגר (2-3 משפטים)",
+  "pains": ["כאב 1", "כאב 2", "כאב 3"],
+  "benefits": ["תועלת פוטנציאלית 1", "תועלת 2"],
+  "salesScript": "סילבוס קצר לתסריט שיחה: נקודות מפתח לדבר עליהן בשיחת מכירה (3-5 נקודות)"
+}
+
+הכאבים והתועלות צריכים להיות ספציפיים לפי מה שהלקוח אמר בשיחה.
+התסריט צריך להתבסס על הכאבים והתועלות שזיהית.`;
+
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
+
+  try {
+    // Try to parse JSON, handle potential markdown code blocks
+    let jsonText = responseText;
+    if (responseText.includes('```')) {
+      jsonText = responseText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    }
+    return JSON.parse(jsonText) as LeadAnalysis;
+  } catch (error) {
+    console.error('Failed to parse AI response:', error);
+    // Return default values if parsing fails
+    return {
+      summary: "לא ניתן לסכם את השיחה",
+      pains: [],
+      benefits: [],
+      salesScript: "לא ניתן ליצור תסריט"
+    };
+  }
+}
