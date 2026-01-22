@@ -154,6 +154,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   }, [emailSent])
 
   // Send lead notification email
+  // Send lead notification email
   const sendLeadEmail = () => {
     const currentLeadId = leadIdRef.current
     if (!currentLeadId || emailSentRef.current) return
@@ -164,23 +165,35 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
     try {
       console.log('🚀 [Client] Sending lead email request for:', currentLeadId)
 
-      // Use sendBeacon for reliability when page is closing
-      if (navigator.sendBeacon) {
-        console.log('📡 [Client] Using navigator.sendBeacon')
+      // Use sendBeacon only when page is closing/hidden required reliability during unload
+      const isLeaving = document.visibilityState === 'hidden';
+
+      if (navigator.sendBeacon && isLeaving) {
+        console.log('📡 [Client] Page unloading - using navigator.sendBeacon')
         const blob = new Blob([JSON.stringify({ leadId: currentLeadId })], { type: 'application/json' });
         const success = navigator.sendBeacon('/api/send-lead-email', blob);
         console.log('📡 [Client] sendBeacon result:', success)
       } else {
-        console.log('📡 [Client] Using fetch (fallback)')
+        console.log('📡 [Client] Using fetch (better for debugging & active page)')
         fetch('/api/send-lead-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ leadId: currentLeadId }),
           keepalive: true
-        }).then(res => {
-          console.log('✅ [Client] Email API response status:', res.status)
-          res.text().then(t => console.log('📄 [Client] Response:', t))
-        }).catch(err => console.error('❌ [Client] Fetch error:', err))
+        }).then(async res => {
+          console.log(`✅ [Client] API Status: ${res.status} ${res.statusText}`)
+          const text = await res.text()
+          try {
+            const json = JSON.parse(text)
+            console.log('📄 [Client] Response JSON:', json)
+          } catch (e) {
+            console.log('📄 [Client] Response Text:', text)
+          }
+
+          if (!res.ok) {
+            console.error('❌ [Client] Server returned error:', res.status)
+          }
+        }).catch(err => console.error('❌ [Client] Fetch network error:', err))
       }
     } catch (error) {
       console.error('❌ [Client] Error calling sendLeadEmail:', error)
