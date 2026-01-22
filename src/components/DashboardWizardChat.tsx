@@ -69,6 +69,7 @@ export default function DashboardWizardChat() {
     const [suggestedPrompt, setSuggestedPrompt] = useState('')
     const [suggestedDescription, setSuggestedDescription] = useState('')
     const [currentPath, setCurrentPath] = useState<'post' | 'magnet' | null>(null)
+    const [generatedFacebookPost, setGeneratedFacebookPost] = useState('')
 
     // Success Modal State
     const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -457,6 +458,7 @@ ${data.generatedPrompt}
             const data = await response.json()
 
             if (data.facebookPost) {
+                setGeneratedFacebookPost(data.facebookPost)
                 addBotMessage(
                     `📱 הנה הצעה לפוסט פייסבוק שיכול להתאים למגנט הזה:
 
@@ -833,6 +835,37 @@ ${data.facebookPost}
                                 </button>
                             </div>
 
+                            {/* Generated Post Text - show only if no post_url */}
+                            {!taskData.post_url && generatedFacebookPost && (
+                                <div style={{ marginBottom: '24px' }}>
+                                    <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '8px', textAlign: 'right' }}>📝 הפוסט שלך (העתק ופרסם ברשתות):</label>
+                                    <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', position: 'relative' }}>
+                                        <textarea
+                                            readOnly
+                                            value={`${generatedFacebookPost}\n\n🔗 ${window.location.origin}/t/${createdTask.id}`}
+                                            style={{
+                                                width: '100%',
+                                                minHeight: '120px',
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: 'var(--text-primary)',
+                                                fontSize: '0.9rem',
+                                                resize: 'none',
+                                                direction: 'rtl',
+                                                textAlign: 'right'
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => copyToClipboard(`${generatedFacebookPost}\n\n🔗 ${window.location.origin}/t/${createdTask.id}`)}
+                                            className="btn btn-secondary"
+                                            style={{ position: 'absolute', bottom: '8px', left: '8px', padding: '6px 12px', fontSize: '0.8rem' }}
+                                        >
+                                            העתק פוסט 📋
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
                                 <a
                                     href={`https://wa.me/?text=${encodeURIComponent(`הכנתי לכם הפתעה! 🎁\nכנסו לקישור וגלו:\n${window.location.origin}/t/${createdTask.id}`)}`}
@@ -843,15 +876,27 @@ ${data.facebookPost}
                                 >
                                     שתף בווטסאפ 📱
                                 </a>
-                                <a
-                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/t/${createdTask.id}`)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn"
-                                    style={{ background: '#1877F2', color: 'white', justifyContent: 'center' }}
-                                >
-                                    שתף בפייסבוק 👍
-                                </a>
+                                {taskData.post_url ? (
+                                    <a
+                                        href={taskData.post_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn"
+                                        style={{ background: '#1877F2', color: 'white', justifyContent: 'center' }}
+                                    >
+                                        חזרה לפוסט שלך 🔙
+                                    </a>
+                                ) : (
+                                    <a
+                                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/t/${createdTask.id}`)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn"
+                                        style={{ background: '#1877F2', color: 'white', justifyContent: 'center' }}
+                                    >
+                                        שתף בפייסבוק 👍
+                                    </a>
+                                )}
                             </div>
 
                             <button
