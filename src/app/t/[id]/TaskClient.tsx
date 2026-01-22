@@ -665,7 +665,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
                   className="btn btn-secondary"
                   style={{ padding: '10px 24px' }}
                 >
-                  עוד משימות ({otherTasks.length - 3}+)
+                  עוד מגנטים ({otherTasks.length - 3}+)
                 </button>
               </div>
             )}

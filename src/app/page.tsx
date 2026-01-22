@@ -95,7 +95,7 @@ export default async function LandingPage() {
       {/* Feed Section - Dark - HIDDEN */}
       <section id="feed" className="section" style={{ display: 'none' }}>
         <div className="container">
-          <h2 className="section-title">משימות פופולריות</h2>
+          <h2 className="section-title">מגנטים פופולריים</h2>
 
           {sortedTasks && sortedTasks.length > 0 ? (
             <>
@@ -128,7 +128,7 @@ export default async function LandingPage() {
               {sortedTasks.length >= 6 && (
                 <div style={{ textAlign: 'center', marginTop: '32px' }}>
                   <Link href="/login" className="btn btn-secondary">
-                    לכל המשימות
+                    לכל המגנטים
                   </Link>
                 </div>
               )}
@@ -136,7 +136,7 @@ export default async function LandingPage() {
           ) : (
             <div className="card" style={{ padding: '60px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
               <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🎯</div>
-              <h3 style={{ marginBottom: '12px' }}>עוד אין משימות ציבוריות</h3>
+              <h3 style={{ marginBottom: '12px' }}>עוד אין מגנטים ציבוריים</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
                 היה הראשון ליצור משימה!
               </p>

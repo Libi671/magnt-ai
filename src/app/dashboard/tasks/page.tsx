@@ -21,8 +21,8 @@ export default async function TasksPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>המשימות שלי</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>נהל את כל המשימות שיצרת</p>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>המגנטים שלי</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>נהל את כל המגנטים שיצרת</p>
         </div>
         <Link href="/dashboard/tasks/new" className="btn btn-primary">
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -75,7 +75,7 @@ export default async function TasksPage() {
       ) : (
         <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
           <div style={{ fontSize: '4rem', marginBottom: '16px' }}>📝</div>
-          <h2 style={{ marginBottom: '12px' }}>אין לך משימות עדיין</h2>
+          <h2 style={{ marginBottom: '12px' }}>אין לך מגנטים עדיין</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
             צור את המשימה הראשונה שלך ותתחיל לאסוף לידים
           </p>

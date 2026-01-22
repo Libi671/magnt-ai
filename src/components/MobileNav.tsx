@@ -27,10 +27,10 @@ export default function MobileNav() {
                             🏠 ראשי
                         </Link>
                         <Link href="/dashboard/tasks" className="mobile-menu-link" onClick={() => setIsOpen(false)}>
-                            📋 משימות
+                            🧲 מגנטים
                         </Link>
                         <Link href="/dashboard/series" className="mobile-menu-link" onClick={() => setIsOpen(false)}>
-                            📚 סדרות
+                            🔥 מרתיחי לידים
                         </Link>
                         <Link href="/dashboard/leads" className="mobile-menu-link" onClick={() => setIsOpen(false)}>
                             👥 לידים

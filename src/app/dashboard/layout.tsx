@@ -34,8 +34,8 @@ export default async function DashboardLayout({
         {/* Center Navigation - Desktop */}
         <nav className="header-nav">
           <Link href="/dashboard" className="header-nav-link active">ראשי</Link>
-          <Link href="/dashboard/tasks" className="header-nav-link">משימות</Link>
-          <Link href="/dashboard/series" className="header-nav-link">סדרות</Link>
+          <Link href="/dashboard/tasks" className="header-nav-link">מגנטים</Link>
+          <Link href="/dashboard/series" className="header-nav-link">מרתיחי לידים</Link>
           <Link href="/dashboard/leads" className="header-nav-link">לידים</Link>
           <Link href="/about" className="header-nav-link">על המערכת</Link>
         </nav>

@@ -45,8 +45,8 @@ export default async function AboutPage() {
                 {/* Center Navigation */}
                 <nav className="header-nav">
                     <Link href="/dashboard" className="header-nav-link">ראשי</Link>
-                    <Link href="/dashboard/tasks" className="header-nav-link">משימות</Link>
-                    <Link href="/dashboard/series" className="header-nav-link">סדרות</Link>
+                    <Link href="/dashboard/tasks" className="header-nav-link">מגנטים</Link>
+                    <Link href="/dashboard/series" className="header-nav-link">מרתיחי לידים</Link>
                     <Link href="/dashboard/leads" className="header-nav-link">לידים</Link>
                     <Link href="/about" className="header-nav-link active">על המערכת</Link>
                 </nav>
@@ -460,7 +460,7 @@ export default async function AboutPage() {
             {/* Feed Section - Updated */}
             <section id="feed" className="section" style={{ background: 'var(--bg-glass)' }}>
                 <div className="container">
-                    <h2 className="section-title">משימות פופולריות</h2>
+                    <h2 className="section-title">מגנטים פופולריים</h2>
 
                     {sortedTasks && sortedTasks.length > 0 ? (
                         <>
@@ -484,7 +484,7 @@ export default async function AboutPage() {
                                             {/* CTA */}
                                             <div style={{ marginTop: 'auto' }}>
                                                 <span className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                                                    התחל משימה →
+                                                    התחל מגנט →
                                                 </span>
                                             </div>
                                         </div>
@@ -495,7 +495,7 @@ export default async function AboutPage() {
                             {sortedTasks.length > 6 && (
                                 <div style={{ textAlign: 'center', marginTop: '32px' }}>
                                     <Link href="/dashboard/tasks" className="btn btn-secondary">
-                                        לכל המשימות
+                                        לכל המגנטים
                                     </Link>
                                 </div>
                             )}
@@ -503,9 +503,9 @@ export default async function AboutPage() {
                     ) : (
                         <div className="card" style={{ padding: '60px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
                             <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🎯</div>
-                            <h3 style={{ marginBottom: '12px' }}>עוד אין משימות ציבוריות</h3>
+                            <h3 style={{ marginBottom: '12px' }}>עוד אין מגנטים ציבוריים</h3>
                             <p style={{ color: 'var(--text-secondary)' }}>
-                                בקרוב תוכלו לראות כאן משימות מרהיבות מיוצרי תוכן וחברות
+                                בקרוב תוכלו לראות כאן מגנטים מרהיבים מיוצרי תוכן וחברות
                             </p>
                         </div>
                     )}

@@ -56,9 +56,9 @@ export default async function DashboardPage() {
           {/* Tasks Card */}
           <Link href="/dashboard/tasks" style={{ textDecoration: 'none' }}>
             <div className="card stat-card" style={{ padding: '24px', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>🧲 משימות שנוצרו</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>🧲 מגנטים שנוצרו</div>
               <div style={{ fontSize: '3rem', fontWeight: 700, marginBottom: '8px' }} className="glow-text">{tasksCount || 0}</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--primary-start)' }}>צפה בכל המשימות →</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--primary-start)' }}>צפה בכל המגנטים שלך →</div>
             </div>
           </Link>
 
@@ -74,9 +74,9 @@ export default async function DashboardPage() {
           {/* Conversions Card */}
           <Link href="/dashboard/series" style={{ textDecoration: 'none' }}>
             <div className="card stat-card" style={{ padding: '24px', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>💳 המרות</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>🔥 מרתיחי לידים</div>
               <div style={{ fontSize: '3rem', fontWeight: 700, marginBottom: '8px' }} className="glow-text">0%</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--primary-start)' }}>צפה בסדרות החימום שיצרת →</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--primary-start)' }}>צפה בכל מרתיחי הלידים שיצרת →</div>
             </div>
           </Link>
         </div>
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
       {recentTasks && recentTasks.length > 0 && (
         <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>משימות אחרונות</h2>
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>מגנטים אחרונים</h2>
             <Link href="/dashboard/tasks/new" className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
               + צור משימה חדשה
             </Link>
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
 
           <div style={{ marginTop: '16px', textAlign: 'center' }}>
             <Link href="/dashboard/tasks" style={{ color: 'var(--primary-start)', fontSize: '0.9rem' }}>
-              לכל המשימות →
+              לכל המגנטים →
             </Link>
           </div>
         </div>

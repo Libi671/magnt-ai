@@ -23,7 +23,7 @@ export default async function LeadsPage() {
     <div>
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>הלידים שלי</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>כל הלידים שנאספו מהמשימות שלך</p>
+        <p style={{ color: 'var(--text-secondary)' }}>כל הלידים שנאספו מהמגנטים שלך</p>
       </div>
 
       {uniqueLeads && uniqueLeads.length > 0 ? (
@@ -104,7 +104,7 @@ export default async function LeadsPage() {
           <div style={{ fontSize: '4rem', marginBottom: '16px' }}>📱</div>
           <h2 style={{ marginBottom: '12px' }}>אין לידים עדיין</h2>
           <p style={{ color: 'var(--text-secondary)' }}>
-            כשמשתמשים ישלימו משימות, הלידים יופיעו כאן
+            כשמשתמשים ישתתפו במגנטים, הלידים יופיעו כאן
           </p>
         </div>
       )}
