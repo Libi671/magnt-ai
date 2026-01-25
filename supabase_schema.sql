@@ -4,8 +4,14 @@ CREATE TABLE IF NOT EXISTS public.users (
   email TEXT,
   name TEXT,
   avatar_url TEXT,
+  phone TEXT,
+  workshop_consent BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migration: Add phone column to existing users table (run this if table already exists)
+-- ALTER TABLE public.users ADD COLUMN IF NOT EXISTS phone TEXT;
+-- ALTER TABLE public.users ADD COLUMN IF NOT EXISTS workshop_consent BOOLEAN DEFAULT false;
 
 -- Create tasks table
 CREATE TABLE IF NOT EXISTS public.tasks (

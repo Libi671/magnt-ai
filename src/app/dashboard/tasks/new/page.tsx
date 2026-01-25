@@ -74,6 +74,13 @@ export default function NewTaskPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [createdTask, setCreatedTask] = useState<{ id: string, title: string } | null>(null)
 
+  // Phone Request Modal State
+  const [showPhoneModal, setShowPhoneModal] = useState(false)
+  const [phoneInput, setPhoneInput] = useState('')
+  const [phoneLoading, setPhoneLoading] = useState(false)
+  const [userHasPhone, setUserHasPhone] = useState(false)
+  const [userHasWorkshopConsent, setUserHasWorkshopConsent] = useState(false)
+
   const scrollToBottom = () => {
     // Scroll only within the chat container, not the whole page
     if (chatContainerRef.current) {
@@ -85,16 +92,42 @@ export default function NewTaskPage() {
     scrollToBottom()
   }, [messages])
 
-  // Get user email for default notify_email
+  // Get user email and check if they have phone and workshop consent
   useEffect(() => {
-    const getUserEmail = async () => {
+    const getUserData = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user?.email) {
         setTaskData(prev => ({ ...prev, notify_email: user.email! }))
       }
+      // Check if user has phone and workshop_consent in their profile
+      if (user?.id) {
+        try {
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('phone, workshop_consent')
+            .eq('id', user.id)
+            .single()
+          
+          console.log('User data from DB:', { userData, error })
+          
+          if (!error && userData) {
+            if (userData.phone) {
+              setUserHasPhone(true)
+              setPhoneInput(userData.phone) // Pre-fill phone
+            }
+            if (userData.workshop_consent) {
+              console.log('User already consented to workshop')
+              setUserHasWorkshopConsent(true)
+            }
+          }
+        } catch (err) {
+          console.log('Note: phone column may not exist yet in database', err)
+          // If columns don't exist, we'll just show the phone modal
+        }
+      }
     }
-    getUserEmail()
+    getUserData()
   }, [])
 
   // Track if initialized
@@ -504,7 +537,18 @@ ${data.facebookPost}
 
       if (data) {
         setCreatedTask({ id: data.id, title: data.title })
-        setShowSuccessModal(true)
+        // DEBUG: Log the state
+        console.log('Task created! userHasWorkshopConsent:', userHasWorkshopConsent)
+        
+        // If user hasn't consented to workshop yet, show phone modal first
+        // This ensures we ask for phone after completing the challenge
+        if (!userHasWorkshopConsent) {
+          console.log('Showing phone modal')
+          setShowPhoneModal(true)
+        } else {
+          console.log('Showing success modal (user already consented)')
+          setShowSuccessModal(true)
+        }
       }
 
     } catch (error) {
@@ -520,6 +564,53 @@ ${data.facebookPost}
     navigator.clipboard.writeText(text).then(() => {
       alert('הקישור הועתק ללוח!')
     })
+  }
+
+  // Handle phone consent - user agrees to workshop
+  const handlePhoneConsent = async () => {
+    if (!phoneInput.trim()) {
+      alert('אנא הזן מספר טלפון')
+      return
+    }
+
+    setPhoneLoading(true)
+    try {
+      const response = await fetch('/api/workshop-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phoneInput,
+          consent: true
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setUserHasWorkshopConsent(true)
+        setUserHasPhone(true)
+        setShowPhoneModal(false)
+        setShowSuccessModal(true)
+      } else {
+        console.error('API error:', data)
+        alert('שגיאה בשמירה, אבל המגנט נוצר בהצלחה!')
+        setShowPhoneModal(false)
+        setShowSuccessModal(true)
+      }
+    } catch (error) {
+      console.error('Error saving phone:', error)
+      alert('שגיאה בשמירה, אבל המגנט נוצר בהצלחה!')
+      setShowPhoneModal(false)
+      setShowSuccessModal(true)
+    } finally {
+      setPhoneLoading(false)
+    }
+  }
+
+  // Handle phone decline - user doesn't want workshop
+  const handlePhoneDecline = () => {
+    setShowPhoneModal(false)
+    setShowSuccessModal(true)
   }
 
   return (
@@ -727,6 +818,108 @@ ${data.facebookPost}
           </div>
         </div>
       </div>
+
+      {/* Phone Request Modal */}
+      {showPhoneModal && mounted && createPortal(
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          backdropFilter: 'blur(8px)',
+          padding: '20px'
+        }}>
+          <div className="card" style={{ 
+            maxWidth: '450px', 
+            width: '100%', 
+            padding: '32px', 
+            textAlign: 'center', 
+            position: 'relative',
+            background: 'linear-gradient(180deg, rgba(30, 32, 50, 1) 0%, rgba(25, 27, 40, 1) 100%)',
+            border: '1px solid rgba(102, 126, 234, 0.3)'
+          }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🎁</div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px', color: 'var(--primary-light)' }}>
+              יש לנו מתנה בשבילך!
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>
+              אנחנו מתכוונים לשלוח לך <strong style={{ color: 'var(--text-primary)' }}>סדנה דיגיטלית של 7 ימים</strong> - איך להפוך למגנט לידים!
+              <br /><br />
+              תקבל טיפים יומיים, כלים מעשיים ותובנות שיעזרו לך למשוך יותר לקוחות.
+            </p>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ 
+                color: 'var(--text-muted)', 
+                fontSize: '0.9rem', 
+                display: 'block', 
+                marginBottom: '8px',
+                textAlign: 'right'
+              }}>
+                מספר הטלפון שלך (ווטסאפ)
+              </label>
+              <input
+                type="tel"
+                className="input"
+                placeholder="050-1234567"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                style={{ 
+                  fontSize: '1.1rem', 
+                  textAlign: 'center',
+                  direction: 'ltr'
+                }}
+                disabled={phoneLoading}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+              <button
+                onClick={handlePhoneConsent}
+                className="btn btn-primary btn-large"
+                style={{ 
+                  width: '100%',
+                  padding: '14px 24px',
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
+                disabled={phoneLoading || !phoneInput.trim()}
+              >
+                {phoneLoading ? '⏳ שולח...' : '✅ מאשר - שלחו לי את הסדנה!'}
+              </button>
+              <button
+                onClick={handlePhoneDecline}
+                className="btn btn-secondary"
+                style={{ 
+                  width: '100%',
+                  padding: '12px 24px',
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}
+                disabled={phoneLoading}
+              >
+                לא מאשר - להמשיך בלי הסדנה
+              </button>
+            </div>
+            
+            <p style={{ 
+              color: 'var(--text-muted)', 
+              fontSize: '0.75rem', 
+              marginTop: '16px',
+              opacity: 0.7
+            }}>
+              לא נשלח ספאם. רק תוכן ערך לסדנה.
+            </p>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Success Modal */}
       {showSuccessModal && createdTask && mounted && createPortal(
