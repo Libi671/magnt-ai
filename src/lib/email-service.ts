@@ -1,7 +1,14 @@
 import { Resend } from 'resend';
 import { LeadAnalysis } from './gemini';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resendClient: Resend | null = null;
+function getResend(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 export interface LeadEmailData {
   // Task info
@@ -23,7 +30,7 @@ export async function sendLeadNotificationEmail(data: LeadEmailData) {
   const emailHtml = generateEmailHtml(data, whatsappLink);
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: 'Magnt.AI <leads@wamagnet.com>',
       to: data.taskCreatorEmail,
       subject: `🧲 ליד חדש מהמגנט: ${data.taskTitle} - ${data.leadName}`,
