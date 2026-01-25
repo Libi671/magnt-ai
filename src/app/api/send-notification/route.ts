@@ -94,8 +94,7 @@ export async function POST(request: NextRequest) {
     const emailSubject = `ליד חדש באתגר: ${task.title}`
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://magnt.ai'
     const taskUrl = `${baseUrl}/t/${task.id}`
-    const dashboardUrl = `${baseUrl}/dashboard/series`
-    // Use logo from your domain - download the image and put it in public/logo.png
+    // Logo from public folder - accessible via baseUrl
     const logoUrl = `${baseUrl}/logo.png`
     
     // Format phone for WhatsApp (remove leading 0, add country code)
@@ -112,10 +111,10 @@ export async function POST(request: NextRequest) {
     }
     
     const whatsappPhone = formatPhoneForWhatsApp(lead.phone)
-    const whatsappUrl = whatsappPhone ? `${baseUrl}/wa/${whatsappPhone}` : ''
-    const calendarUrl = `${baseUrl}/calendar`
-    const seriesInfoUrl = `${baseUrl}/series-info`
-    const workshopUrl = `${baseUrl}/workshop`
+    // Direct links to actual destinations
+    const seriesInfoUrl = 'https://www.wamagnet.com/dashboard/series'
+    const calendarUrl = 'https://calendar.app.google/CRFCj1XM5NKBSEGB8'
+    const workshopUrl = 'https://wa.me/972583654698?text=%D7%91%D7%A8%D7%95%D7%A8'
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -135,7 +134,7 @@ export async function POST(request: NextRequest) {
 
           <!-- Header -->
           <div style="text-align: center; padding: 32px 0; border-bottom: 1px solid #333; direction: rtl;">
-            <img src="${baseUrl}/logo.png" alt="Magnt.AI" style="height: 40px; max-width: 100%; display: block; margin: 0 auto 16px auto;">
+            <img src="${logoUrl}" alt="Magnt.AI" style="height: 40px; max-width: 100%; display: block; margin: 0 auto 16px auto;">
             <h1 style="color: white; margin: 16px 0 0 0; font-size: 24px; direction: rtl; text-align: center;">🧲 ליד חדש הגיע!</h1>
             <p style="color: #a0a0a0; margin: 8px 0 0 0; direction: rtl; text-align: center;">מהמגנט: ${task.title}</p>
           </div>
@@ -236,7 +235,7 @@ export async function POST(request: NextRequest) {
 
     const resend = await getResend();
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Magnt.AI <noreply@magnt.ai>',
+      from: process.env.RESEND_FROM_EMAIL || 'Magnt.AI <leads@wamagnet.com>',
       to: recipientEmail,
       subject: emailSubject,
       html: emailHtml,

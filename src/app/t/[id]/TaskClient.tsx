@@ -39,6 +39,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   const [completed, setCompleted] = useState(false)
   const [rating, setRating] = useState(0)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [showAllTasks, setShowAllTasks] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -49,8 +50,10 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   const [userPhone, setUserPhone] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [firstBotResponseReceived, setFirstBotResponseReceived] = useState(false)
+  const [secondBotResponseReceived, setSecondBotResponseReceived] = useState(false)
   const [pendingBotResponse, setPendingBotResponse] = useState<string | null>(null)
   const [firstBotResponse, setFirstBotResponse] = useState<string | null>(null)
+  const [secondBotResponse, setSecondBotResponse] = useState<string | null>(null)
   // Local state for abandonment tracking
   const [emailSent, setEmailSent] = useState(false)
   const lastActivityRef = useRef<number>(Date.now())
@@ -133,10 +136,21 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         }),
       })
 
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.warn('API returned non-OK status:', response.status, errorData)
+        return null
+      }
+
       const data = await response.json()
 
       if (data.error) {
-        console.error('Error creating lead via API:', data)
+        console.warn('Error creating lead via API:', {
+          error: data.error,
+          details: data.details,
+          code: data.code
+        })
         return null
       }
 
@@ -145,9 +159,11 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         return data.lead
       }
 
+      // If we got here, the response was successful but didn't have the expected structure
+      console.warn('Unexpected API response structure:', data)
       return null
     } catch (error) {
-      console.error('Error in createLead function:', error)
+      console.warn('Error in createLead function:', error instanceof Error ? error.message : 'Unknown error')
       return null
     }
   }
@@ -289,24 +305,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
       setUserName(userMessage)
       setMessages(prev => [...prev,
       { role: 'user', content: userMessage },
-      { role: 'system', content: `נעים מאוד ${userMessage}! 📱\n\nמה מספר הטלפון שלך?` }
-      ])
-      setCollectionStep('phone')
-      return
-    }
-
-    if (collectionStep === 'phone') {
-      if (!isValidPhone(userMessage)) {
-        setMessages(prev => [...prev,
-        { role: 'user', content: userMessage },
-        { role: 'system', content: '❌ המספר שהזנת לא תקין.\n\nאנא הזן מספר טלפון ישראלי תקין (למשל: 0501234567)' }
-        ])
-        return
-      }
-      setUserPhone(userMessage)
-      setMessages(prev => [...prev,
-      { role: 'user', content: userMessage },
-      { role: 'system', content: '✅ מעולה!\n\nמה כתובת האימייל שלך?' }
+      { role: 'system', content: `נעים מאוד ${userMessage}! 📱\n\nמה האימייל שלך?\n\nנשלח לך את הסיכום של התרגיל ותכנים נוספים מיוצר המשימה, לא נשלח ספאם.\nבהשארת הפרטים אתה מאשר גם את השימוש בתקנון שלנו.` }
       ])
       setCollectionStep('email')
       return
@@ -323,36 +322,73 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
       setUserEmail(userMessage)
       setMessages(prev => [...prev,
       { role: 'user', content: userMessage },
-      { role: 'system', content: '✅ תודה רבה! קיבלתי את כל הפרטים.\n\n📋 בהשארת הפרטים אתה מאשר את התקנון ומסכים לקבל דיוור מיוצר המגנט ומ-Magnt.AI.\n\nבוא נמשיך... 🚀' }
+      { role: 'system', content: '✅ מעולה!\n\nמה מספר הטלפון שלך?' }
+      ])
+      setCollectionStep('phone')
+      return
+    }
+
+    if (collectionStep === 'phone') {
+      if (!isValidPhone(userMessage)) {
+        setMessages(prev => [...prev,
+        { role: 'user', content: userMessage },
+        { role: 'system', content: '❌ המספר שהזנת לא תקין.\n\nאנא הזן מספר טלפון ישראלי תקין (למשל: 0501234567)' }
+        ])
+        return
+      }
+      setUserPhone(userMessage)
+      setMessages(prev => [...prev,
+      { role: 'user', content: userMessage },
+      { role: 'system', content: '✅ תודה רבה! קיבלתי את כל הפרטים.\n\n🚀 אני מקפיץ לך שוב את ההודעה הקודמת' }
       ])
       setCollectionStep('done')
 
-      console.log('Creating lead with:', { userName, userPhone, email: userMessage, taskId: task.id })
-      const lead = await createLead(userName, userPhone, userMessage)
+      console.log('Creating lead with:', { userName, userPhone, email: userEmail, taskId: task.id })
+      const lead = await createLead(userName, userPhone, userEmail)
       if (lead) {
         console.log('Lead created/updated successfully, setting leadId to:', lead.id)
         setLeadId(lead.id)
-        saveUserInfoToCache(userName, userPhone, userMessage)
+        saveUserInfoToCache(userName, userPhone, userEmail)
       } else {
-        console.error('Failed to create/update lead - lead is null')
         // Try to find existing lead as fallback
+        console.log('Lead creation returned null, trying to find existing lead as fallback...')
         const supabase = createClient()
-        const { data: existingLead } = await supabase
+        const { data: existingLead, error: searchError } = await supabase
           .from('leads')
           .select('id')
           .eq('task_id', task.id)
-          .or(`email.eq.${userMessage},phone.eq.${userPhone}`)
+          .or(`email.eq.${userEmail},phone.eq.${userPhone}`)
           .maybeSingle()
 
         if (existingLead) {
           console.log('Found existing lead as fallback:', existingLead.id)
           setLeadId(existingLead.id)
+        } else if (searchError) {
+          console.warn('Error searching for existing lead:', searchError)
+        } else {
+          console.warn('No existing lead found and creation failed - lead tracking may be unavailable')
         }
       }
 
-      if (firstBotResponse) {
+      // After user completes details collection, add the second bot response again at the bottom
+      // so the user can see what they need to respond to
+      if (secondBotResponse) {
         setTimeout(() => {
-          setMessages(prev => [...prev, { role: 'model', content: firstBotResponse }])
+          // Add the second response again at the end of messages
+          setMessages(prev => {
+            // Check if it's already the last message to avoid duplicates
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage && lastMessage.role === 'model' && lastMessage.content === secondBotResponse) {
+              // Already at the end, just trigger scroll
+              return prev
+            }
+            // Add it at the end
+            return [...prev, { role: 'model', content: secondBotResponse }]
+          })
+          // Scroll to bottom after adding the message
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+          }, 100)
         }, 1000)
       }
       return
@@ -379,11 +415,36 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         console.error('API Error:', data)
         setMessages(prev => [...prev, { role: 'model', content: `שגיאה: ${data.details || data.error}. נסה שוב.` }])
       } else if (data.response) {
+        // Count only regular conversation messages (excluding data collection)
+        // This message will be added, so we count current messages + 1
+        const regularUserMessages = messages.filter(m => {
+          if (m.role !== 'user') return false
+          // If collection hasn't started, it's a regular message
+          const isDuringCollection = messages.some((msg, idx) => 
+            idx <= messages.indexOf(m) && 
+            msg.role === 'system' && 
+            (msg.content.includes('💡 לפני שנמשיך') || 
+             msg.content.includes('מה השם שלך') ||
+             msg.content.includes('מה האימייל שלך') ||
+             msg.content.includes('מה מספר הטלפון'))
+          )
+          return !isDuringCollection
+        }).length
+        const currentUserMessageCount = regularUserMessages + 1 // +1 for the current message
+        
         if (!firstBotResponseReceived && collectionStep === 'none') {
+          // First bot response - just save it and show it
           setFirstBotResponseReceived(true)
           setFirstBotResponse(data.response)
           setMessages(prev => [...prev, { role: 'model', content: data.response }])
+          
+        } else if (!secondBotResponseReceived && collectionStep === 'none' && currentUserMessageCount >= 2) {
+          // Second bot response - show it immediately, then ask for user details
+          setSecondBotResponseReceived(true)
+          setSecondBotResponse(data.response)
+          setMessages(prev => [...prev, { role: 'model', content: data.response }])
 
+          // Ask for details immediately after showing the second response
           setTimeout(() => {
             setMessages(prev => [...prev, {
               role: 'system',
@@ -608,6 +669,180 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
     setTimeout(() => setLinkCopied(false), 2000)
   }
 
+  // Terms Modal Component
+  const TermsModal = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backdropFilter: 'blur(5px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '20px',
+      overflowY: 'auto'
+    }} onClick={() => setShowTermsModal(false)}>
+      <div className="card" style={{
+        padding: '40px',
+        maxWidth: '800px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        margin: '20px 0'
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+            תקנון האתר
+          </h2>
+          <button
+            onClick={() => setShowTermsModal(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              padding: '8px',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'none'
+              e.currentTarget.style.color = 'var(--text-muted)'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>1. הגדרות</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            "האתר" - אתר Magnt.AI ושירותיו.<br />
+            "המשתמש" - כל אדם הגולש באתר או משתמש בשירותיו.<br />
+            "היוצר" - בעל עסק או יוצר תוכן שמשתמש בפלטפורמה ליצירת מגנטים.<br />
+            "מגנט" - כלי אינטראקטיבי ליצירת קשר ואיסוף פרטים.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>2. קבלת התנאים</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            השימוש באתר ובשירותיו מהווה הסכמה לתנאים אלה. אם אינך מסכים לתנאים, אנא הימנע משימוש באתר.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>3. שירותי האתר</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            Magnt.AI מספק פלטפורמה ליצירת כלים אינטראקטיביים (מגנטים) לאיסוף לידים וניהול שיחות עם לקוחות פוטנציאליים באמצעות בינה מלאכותית.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>4. הסכמה לדיוור ותקשורת שיווקית</h3>
+          <div style={{
+            background: 'rgba(102, 126, 234, 0.1)',
+            border: '1px solid rgba(102, 126, 234, 0.3)',
+            borderRadius: 'var(--radius-md)',
+            padding: '20px',
+            marginBottom: '16px'
+          }}>
+            <p style={{ color: 'var(--text-primary)', lineHeight: 1.8, fontWeight: 500 }}>
+              ⚠️ חשוב לקרוא:
+            </p>
+          </div>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            בהשתתפות במגנט (אתגר, שאלון, או כל פעילות אינטראקטיבית אחרת באתר) ובמסירת פרטי הקשר שלך (שם, טלפון, אימייל),
+            <strong style={{ color: 'var(--text-primary)' }}> אתה מאשר ומסכים לקבל:</strong>
+          </p>
+          <ul style={{ color: 'var(--text-secondary)', lineHeight: 2, marginTop: '16px', paddingRight: '20px' }}>
+            <li>הודעות, עדכונים ותוכן שיווקי <strong style={{ color: 'var(--text-primary)' }}>מיוצר המגנט</strong> (העסק או היוצר שיצר את הפעילות בה השתתפת)</li>
+            <li>הודעות, עדכונים ותוכן שיווקי <strong style={{ color: 'var(--text-primary)' }}>מ-Magnt.AI</strong> (מפעילי הפלטפורמה)</li>
+          </ul>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, marginTop: '16px' }}>
+            הדיוור יכול להגיע בדואר אלקטרוני, SMS, WhatsApp או כל אמצעי תקשורת אחר.<br /><br />
+            ניתן לבטל את ההסכמה בכל עת על ידי פנייה אלינו בכתובת: libi41@gmail.com או על ידי לחיצה על קישור ההסרה שיופיע בכל הודעה.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>5. פרטיות ואבטחת מידע</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            אנו מתחייבים לשמור על פרטיות המידע שלך בהתאם לחוק הגנת הפרטיות. המידע שנאסף ישמש אך ורק למטרות המפורטות בתקנון זה.<br /><br />
+            המידע נשמר בשרתים מאובטחים ולא יימסר לצדדים שלישיים, למעט ליוצר המגנט בו השתתפת.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>6. זכויות יוצרים וקניין רוחני</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            כל התכנים באתר, לרבות עיצוב, טקסטים, לוגו, קוד וטכנולוגיה, הם קניינה הבלעדי של Magnt.AI ואין לעשות בהם שימוש ללא אישור בכתב.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>7. אחריות</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            האתר מסופק "כמות שהוא" (AS IS). איננו אחראים לנזקים ישירים או עקיפים שעלולים להיגרם כתוצאה משימוש באתר.<br /><br />
+            יוצרי המגנטים הם האחראים הבלעדיים לתוכן שהם יוצרים ולהתקשרות עם הלקוחות שלהם.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>8. שינויים בתקנון</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            אנו שומרים לעצמנו את הזכות לעדכן תקנון זה מעת לעת. המשך השימוש באתר לאחר עדכון התקנון מהווה הסכמה לתנאים המעודכנים.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '16px', color: 'var(--primary-start)' }}>9. יצירת קשר</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            לשאלות או בירורים בנוגע לתקנון זה, ניתן לפנות אלינו:<br />
+            📧 libi41@gmail.com
+          </p>
+        </section>
+
+        <div style={{
+          borderTop: '1px solid var(--border-color)',
+          paddingTop: '24px',
+          marginTop: '32px',
+          textAlign: 'center',
+          color: 'var(--text-muted)',
+          fontSize: '0.9rem'
+        }}>
+          עודכן לאחרונה: ינואר 2026
+        </div>
+
+        <button
+          onClick={() => setShowTermsModal(false)}
+          className="btn btn-primary"
+          style={{
+            marginTop: '32px',
+            width: '100%',
+            padding: '12px 24px'
+          }}
+        >
+          סגור
+        </button>
+      </div>
+    </div>
+  )
+
   // Share Modal Component
   const ShareModal = () => (
     <div style={{
@@ -741,57 +976,42 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   }
 
   // Main Chat Layout
+  // Count only regular conversation messages with AI, excluding data collection messages
+  // Find the first system message that starts data collection
+  const dataCollectionStartIndex = messages.findIndex(m => 
+    m.role === 'system' && m.content.includes('💡 לפני שנמשיך')
+  )
+  // Find the last system message that ends data collection
+  const dataCollectionEndIndex = messages.findIndex(m => 
+    m.role === 'system' && m.content.includes('✅ תודה רבה! קיבלתי את כל הפרטים')
+  )
+  
+  // Count user messages that are NOT part of data collection
+  const userMessageCount = messages.filter((m, index) => {
+    if (m.role !== 'user') return false
+    
+    // If data collection hasn't started yet, count the message
+    if (dataCollectionStartIndex === -1) return true
+    
+    // If message is before data collection started, count it
+    if (index < dataCollectionStartIndex) return true
+    
+    // If data collection has ended and message is after it, count it
+    if (dataCollectionEndIndex !== -1 && index > dataCollectionEndIndex) return true
+    
+    // Otherwise, it's during data collection, don't count it
+    return false
+  }).length
+  
+  const showRating = collectionStep === 'done' && userMessageCount >= 4
+  
   return (
-    <div className="task-page-main" style={{
+    <div className={`task-page-main ${showRating ? 'has-rating-section' : ''}`} style={{
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--gradient-dark)'
     }}>
-      {/* 🛠️ DEBUG BUTTON - REMOVE LATER */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        zIndex: 9999,
-        background: 'rgba(120, 0, 0, 0.9)',
-        padding: '10px',
-        borderRadius: '8px',
-        border: '1px solid red',
-        color: 'white',
-        fontSize: '12px',
-        maxWidth: '200px'
-      }}>
-        <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>🐞 דיבוג אימייל</p>
-        <p>Lead ID: {leadId ? 'V' : 'X'}</p>
-        <p>Sent: {emailSent ? 'Yes' : 'No'}</p>
-        <button
-          onClick={() => {
-            if (!leadId) {
-              alert('⚠️ אין ליד עדיין! תתחיל שיחה והזן פרטים');
-              return;
-            }
-            alert('🚀 מנסה לשלוח אימייל... בדוק את ה-Console (F12)');
-            // Reset flags to force send
-            emailSentRef.current = false;
-            setEmailSent(false);
-            setTimeout(() => sendLeadEmail(), 100);
-          }}
-          style={{
-            marginTop: '8px',
-            background: '#ff0000',
-            color: 'white',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            width: '100%',
-            fontWeight: 'bold'
-          }}
-        >
-          שלח אימייל ידנית
-        </button>
-      </div>
       {/* Header with Creator and Title */}
       <div style={{
         textAlign: 'center',
@@ -967,8 +1187,8 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
                 className="input"
                 placeholder={
                   collectionStep === 'name' ? 'הכנס את שמך...' :
-                    collectionStep === 'phone' ? 'הכנס מספר טלפון...' :
-                      collectionStep === 'email' ? 'הכנס כתובת אימייל...' :
+                    collectionStep === 'email' ? 'הכנס כתובת אימייל...' :
+                      collectionStep === 'phone' ? 'הכנס מספר טלפון...' :
                         'כתוב את התשובה שלך...'
                 }
                 value={input}
@@ -982,230 +1202,6 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         </div>
       </div>
 
-      {/* Rating & Complete */}
-      {collectionStep === 'done' && messages.filter(m => m.role !== 'system').length >= 6 && (
-        <div style={{
-          padding: '20px',
-          borderTop: '1px solid var(--border-color)',
-          background: 'var(--bg-card)'
-        }}>
-          <div style={{ maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
-            <p style={{ marginBottom: '12px', fontSize: '0.9rem' }}>סיימת? דרג את החוויה:</p>
-            <div className="rating" style={{ justifyContent: 'center', marginBottom: '12px' }}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  style={{
-                    color: star <= rating ? '#fbbf24' : 'var(--text-muted)',
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    cursor: 'pointer',
-                    padding: '4px'
-                  }}
-                >
-                  ⭐
-                </button>
-              ))}
-            </div>
-            <button onClick={handleComplete} className="btn btn-accent" style={{ padding: '10px 24px', marginBottom: '12px' }}>
-              סיים וקבל את התוצאה
-            </button>
-
-            {/* Send Now Button for Testing */}
-            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-              <button
-                onClick={async () => {
-                  setShowDiagnostics(!showDiagnostics)
-                  if (!showDiagnostics) {
-                    const diag = await getDiagnosticInfo()
-                    setDiagnosticInfo(diag)
-                  }
-                }}
-                disabled={emailSending}
-                className="btn btn-secondary"
-                style={{
-                  padding: '12px 24px',
-                  marginBottom: '12px',
-                  width: '100%',
-                  cursor: emailSending ? 'not-allowed' : 'pointer',
-                  opacity: emailSending ? 0.6 : 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  textAlign: 'right'
-                }}
-              >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{emailSending ? '⏳ שולח...' : showDiagnostics ? '🔽 הסתר' : '📧 הצג מידע דיאגנוסטי ושלח אימייל'}</span>
-                </div>
-                {diagnosticInfo && !showDiagnostics && (
-                  <div style={{
-                    width: '100%',
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                    paddingTop: '8px',
-                    borderTop: '1px solid rgba(255,255,255,0.1)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Lead ID:</span>
-                      <span style={{ color: diagnosticInfo.leadId !== '❌ אין' ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                        {diagnosticInfo.leadId !== '❌ אין' ? '✅' : '❌'} {diagnosticInfo.leadId}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>שם:</span>
-                      <span style={{ color: (diagnosticInfo.leadName && diagnosticInfo.leadName !== '❌ אין') || (diagnosticInfo.userName && diagnosticInfo.userName !== '❌ אין') ? '#22c55e' : '#ef4444' }}>
-                        {(diagnosticInfo.leadName && diagnosticInfo.leadName !== '❌ אין') || (diagnosticInfo.userName && diagnosticInfo.userName !== '❌ אין') ? '✅' : '❌'} {diagnosticInfo.leadName || diagnosticInfo.userName || '❌ אין'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>אימייל:</span>
-                      <span style={{ color: (diagnosticInfo.leadEmail && diagnosticInfo.leadEmail !== '❌ אין') || (diagnosticInfo.userEmail && diagnosticInfo.userEmail !== '❌ אין') ? '#22c55e' : '#ef4444' }}>
-                        {(diagnosticInfo.leadEmail && diagnosticInfo.leadEmail !== '❌ אין') || (diagnosticInfo.userEmail && diagnosticInfo.userEmail !== '❌ אין') ? '✅' : '❌'} {diagnosticInfo.leadEmail || diagnosticInfo.userEmail || '❌ אין'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>אימייל יעד:</span>
-                      <span style={{ color: diagnosticInfo.recipientEmail && diagnosticInfo.recipientEmail !== '❌ אין' ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                        {diagnosticInfo.recipientEmail && diagnosticInfo.recipientEmail !== '❌ אין' ? '✅' : '❌'} {diagnosticInfo.recipientEmail || '❌ אין'}
-                      </span>
-                    </div>
-                    <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                      <strong style={{ color: diagnosticInfo.hasAllData ? '#22c55e' : '#ef4444' }}>
-                        {diagnosticInfo.hasAllData ? '✅ מוכן לשליחה' : '❌ חסרים נתונים'}
-                      </strong>
-                    </div>
-                  </div>
-                )}
-              </button>
-
-              {/* Diagnostic Info - Always show when expanded */}
-              {showDiagnostics && diagnosticInfo && (
-                <div style={{
-                  background: 'rgba(40, 40, 55, 0.9)',
-                  padding: '20px',
-                  borderRadius: '8px',
-                  marginBottom: '12px',
-                  textAlign: 'right',
-                  fontSize: '0.9rem',
-                  border: '1px solid var(--border-color)'
-                }}>
-                  <p style={{ marginBottom: '16px', fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '1rem' }}>
-                    🔍 מידע דיאגנוסטי לשליחת אימייל:
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: 'var(--text-secondary)' }}>
-                    <div style={{
-                      padding: '12px',
-                      background: 'rgba(102, 126, 234, 0.1)',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(102, 126, 234, 0.2)'
-                    }}>
-                      <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>📋 פרטי הליד:</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div><strong>Lead ID:</strong> <span style={{ color: diagnosticInfo.leadId !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadId}</span></div>
-                        <div><strong>שם:</strong> <span style={{ color: diagnosticInfo.leadName && diagnosticInfo.leadName !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadName || diagnosticInfo.userName}</span></div>
-                        <div><strong>טלפון:</strong> <span style={{ color: diagnosticInfo.leadPhone && diagnosticInfo.leadPhone !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadPhone || diagnosticInfo.userPhone}</span></div>
-                        <div><strong>אימייל:</strong> <span style={{ color: diagnosticInfo.leadEmail && diagnosticInfo.leadEmail !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadEmail || diagnosticInfo.userEmail}</span></div>
-                        {diagnosticInfo.leadRating && diagnosticInfo.leadRating !== '❌ אין' && (
-                          <div><strong>דירוג:</strong> {diagnosticInfo.leadRating}/5</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{
-                      padding: '12px',
-                      background: 'rgba(118, 75, 162, 0.1)',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(118, 75, 162, 0.2)'
-                    }}>
-                      <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>🎯 פרטי המשימה:</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div><strong>Task ID:</strong> {diagnosticInfo.taskId}</div>
-                        <div><strong>User ID (יוצר):</strong> <span style={{ color: diagnosticInfo.taskUserId !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskUserId}</span></div>
-                        <div><strong>שם יוצר:</strong> <span style={{ color: diagnosticInfo.taskUserName && diagnosticInfo.taskUserName !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskUserName || '❌ אין'}</span></div>
-                      </div>
-                    </div>
-
-                    <div style={{
-                      padding: '12px',
-                      background: diagnosticInfo.hasAllData ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      borderRadius: '6px',
-                      border: `1px solid ${diagnosticInfo.hasAllData ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-                    }}>
-                      <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>📧 פרטי שליחת אימייל:</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div><strong>Notify Email (מועדף):</strong> <span style={{ color: diagnosticInfo.taskNotifyEmail !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskNotifyEmail}</span></div>
-                        <div><strong>User Email (גיבוי):</strong> <span style={{ color: diagnosticInfo.taskUserEmail !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskUserEmail}</span></div>
-                        <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
-                          <strong>📬 אימייל יעד (סופי):</strong> <span style={{
-                            color: diagnosticInfo.recipientEmail !== '❌ אין' ? '#22c55e' : '#ef4444',
-                            fontWeight: 'bold',
-                            fontSize: '1rem'
-                          }}>{diagnosticInfo.recipientEmail}</span>
-                        </div>
-                        <div style={{ marginTop: '8px' }}>
-                          <strong>סטטוס:</strong> <span style={{
-                            color: diagnosticInfo.hasAllData ? '#22c55e' : '#ef4444',
-                            fontWeight: 'bold'
-                          }}>
-                            {diagnosticInfo.hasAllData ? '✅ כל הנתונים זמינים - ניתן לשלוח' : '❌ חסרים נתונים - לא ניתן לשלוח'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={async () => {
-                      await sendNotificationEmail(true)
-                    }}
-                    disabled={emailSending || !diagnosticInfo.hasAllData}
-                    style={{
-                      marginTop: '16px',
-                      padding: '12px 24px',
-                      width: '100%',
-                      fontSize: '1rem',
-                      background: diagnosticInfo.hasAllData ? 'var(--gradient-primary)' : 'rgba(100, 100, 100, 0.3)',
-                      border: 'none',
-                      borderRadius: '6px',
-                      color: 'white',
-                      cursor: (emailSending || !diagnosticInfo.hasAllData) ? 'not-allowed' : 'pointer',
-                      opacity: (emailSending || !diagnosticInfo.hasAllData) ? 0.6 : 1,
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {emailSending ? '⏳ שולח אימייל...' : diagnosticInfo.hasAllData ? '📧 שלח אימייל עכשיו' : '❌ לא ניתן לשלוח - חסרים נתונים'}
-                  </button>
-                </div>
-              )}
-
-              {/* Email Status */}
-              {emailStatus && (
-                <div style={{
-                  marginTop: '12px',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: emailStatus.success
-                    ? 'rgba(34, 197, 94, 0.1)'
-                    : 'rgba(239, 68, 68, 0.1)',
-                  border: `1px solid ${emailStatus.success ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                  color: emailStatus.success ? '#22c55e' : '#ef4444',
-                  fontSize: '0.9rem'
-                }}>
-                  {emailStatus.message}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Other Tasks */}
       {otherTasks && otherTasks.length > 0 && (
@@ -1254,93 +1250,309 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         </div>
       )}
 
-      {/* Share Section - Desktop Only */}
+      {/* Bottom Strip - Desktop Only */}
       <div className="desktop-share-section" style={{
         padding: '24px 20px',
         borderTop: '1px solid var(--border-color)',
-        textAlign: 'center'
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '20px',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        width: '100%'
       }}>
-        <button onClick={() => setShowShareModal(true)} className="btn btn-accent">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
-          </svg>
-          שתף את האתגר
-        </button>
+        {/* Share Button and Terms Link - Left Side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+          <button 
+            onClick={() => setShowShareModal(true)} 
+            className="btn btn-accent"
+            style={{
+              padding: showRating 
+                ? '8px' 
+                : '12px 24px',
+              borderRadius: showRating 
+                ? '50%' 
+                : '8px',
+              width: showRating 
+                ? '40px' 
+                : 'auto',
+              height: showRating 
+                ? '40px' 
+                : 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+            </svg>
+            {!showRating && (
+              <span style={{ marginRight: '8px' }}>שתף את האתגר</span>
+            )}
+          </button>
+          <button
+            onClick={() => setShowTermsModal(true)}
+            style={{ 
+              color: 'var(--text-muted)', 
+              fontSize: '0.75rem', 
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0
+            }}
+          >
+            תקנון
+          </button>
+        </div>
+
+        {/* Rating & Complete - Center */}
+        {showRating && (
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+            textAlign: 'center'
+          }}>
+            <p style={{ marginBottom: '0', fontSize: '0.9rem' }}>סיימת? דרג את החוויה:</p>
+            <div className="rating" style={{ justifyContent: 'center', marginBottom: '0' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  style={{
+                    color: star <= rating ? '#fbbf24' : 'var(--text-muted)',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    padding: '8px',
+                    borderRadius: '50%',
+                    transition: 'all 0.2s ease',
+                    transform: 'scale(1)',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.2)'
+                    e.currentTarget.style.color = '#fbbf24'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.color = star <= rating ? '#fbbf24' : 'var(--text-muted)'
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.9)'
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.2)'
+                  }}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            <button onClick={handleComplete} className="btn btn-accent" style={{ padding: '10px 24px', marginBottom: '0' }}>
+              סיים וקבל את התוצאה
+            </button>
+          </div>
+        )}
+
+        {/* Magnt Badge - Right Side */}
+        <Link
+          href="/"
+          style={{
+            textDecoration: 'none',
+            flexShrink: 0
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '10px 18px',
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95))',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            borderRadius: '50px',
+            fontSize: '0.9rem',
+            color: 'white',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
+            fontWeight: 500
+          }}
+            className="magnt-badge-hover"
+          >
+            <img
+              src="/logo_background.png"
+              alt="Magnt.AI"
+              style={{ height: '24px', width: 'auto' }}
+            />
+            <span>
+              {showRating 
+                ? 'צור אתגר משלך' 
+                : <>נוצר עם <strong>Magnt.AI</strong> - ללקוחות ועסקאות</>
+              }
+            </span>
+          </div>
+        </Link>
       </div>
 
       {/* Share Modal */}
       {showShareModal && <ShareModal />}
 
-      {/* Magnt Badge - Desktop Fixed */}
-      <Link
-        href="/"
-        className="desktop-fixed-badge"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          left: '24px',
-          zIndex: 50,
-          textDecoration: 'none'
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          padding: '10px 18px',
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95))',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.25)',
-          borderRadius: '50px',
-          fontSize: '0.9rem',
-          color: 'white',
-          transition: 'all 0.3s ease',
-          cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
-          fontWeight: 500
-        }}
-          className="magnt-badge-hover"
-        >
-          <img
-            src="/logo_background.png"
-            alt="Magnt.AI"
-            style={{ height: '24px', width: 'auto' }}
-          />
-          <span>נוצר עם <strong>Magnt.AI</strong> - ללקוחות ועסקאות</span>
+      {/* Terms Modal */}
+      {showTermsModal && <TermsModal />}
+
+      {/* Mobile Rating Section - Above Footer (only on mobile) */}
+      {showRating && (
+        <div className="mobile-rating-section">
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+            textAlign: 'center'
+          }}>
+            <p style={{ marginBottom: '0', fontSize: '0.9rem' }}>סיימת? דרג את החוויה:</p>
+            <div className="rating" style={{ justifyContent: 'center', marginBottom: '0' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  style={{
+                    color: star <= rating ? '#fbbf24' : 'var(--text-muted)',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    padding: '8px',
+                    borderRadius: '50%',
+                    transition: 'all 0.2s ease',
+                    transform: 'scale(1)',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.2)'
+                    e.currentTarget.style.color = '#fbbf24'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.color = star <= rating ? '#fbbf24' : 'var(--text-muted)'
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.9)'
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.2)'
+                  }}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            <button onClick={handleComplete} className="btn btn-accent" style={{ padding: '10px 24px', marginBottom: '0', width: '100%', maxWidth: '300px' }}>
+              סיים וקבל את התוצאה
+            </button>
+          </div>
         </div>
-      </Link>
+      )}
 
       {/* Mobile Sticky Footer */}
       <div className="mobile-sticky-footer">
-        {/* Brand */}
-        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img
-            src="/logo_background.png"
-            alt="Magnt.AI"
-            style={{ height: '28px' }}
-          />
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>נוצר עם <strong style={{ color: 'white' }}>Magnt.AI</strong></span>
-        </Link>
+        {/* Share Button and Terms Link */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="btn btn-accent"
+            style={{
+              padding: '8px',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            aria-label="שתף את האתגר"
+          >
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setShowTermsModal(true)}
+            style={{ 
+              color: 'var(--text-muted)', 
+              fontSize: '0.7rem', 
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0
+            }}
+          >
+            תקנון
+          </button>
+        </div>
 
-        {/* Share Button (Icon only) */}
-        <button
-          onClick={() => setShowShareModal(true)}
-          className="btn btn-accent"
-          style={{
-            padding: '8px',
-            borderRadius: '50%',
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+        {/* Brand / Create Task Button */}
+        <Link 
+          href="/" 
+          style={{ 
+            textDecoration: 'none', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            flex: showRating ? '1' : '0 1 auto'
           }}
-          aria-label="שתף את האתגר"
         >
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
-          </svg>
-        </button>
+          {showRating ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95))',
+              borderRadius: '50px',
+              fontSize: '0.85rem',
+              color: 'white',
+              fontWeight: 500,
+              flex: 1,
+              justifyContent: 'center'
+            }}>
+              <img
+                src="/logo_background.png"
+                alt="Magnt.AI"
+                style={{ height: '20px', width: 'auto' }}
+              />
+              <span>צור אתגר משלך</span>
+            </div>
+          ) : (
+            <>
+              <img
+                src="/logo_background.png"
+                alt="Magnt.AI"
+                style={{ height: '28px' }}
+              />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>נוצר עם <strong style={{ color: 'white' }}>Magnt.AI</strong></span>
+            </>
+          )}
+        </Link>
       </div>
     </div>
   )

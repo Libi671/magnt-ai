@@ -1446,6 +1446,21 @@ tr:hover td {
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* Mobile Rating Section (appears above sticky footer) */
+.mobile-rating-section {
+  display: none;
+  position: fixed;
+  bottom: 80px; /* Height of mobile-sticky-footer */
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 20px;
+  z-index: 99;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+}
+
 @media (max-width: 768px) {
 
   /* Hide desktop elements on mobile */
@@ -1459,11 +1474,32 @@ tr:hover td {
 
   /* Show mobile elements */
   .mobile-sticky-footer {
-    display: flex;
+    display: flex !important;
+  }
+
+  .mobile-rating-section {
+    display: block !important;
   }
 
   /* Add padding to bottom so content isn't covered */
+  /* Base padding for mobile footer */
   .task-page-main {
     padding-bottom: 80px !important;
+  }
+
+  /* Additional padding when rating section is shown */
+  .task-page-main.has-rating-section {
+    padding-bottom: 280px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* On desktop, rating should be in one row with other buttons */
+  .mobile-sticky-footer {
+    display: none !important;
+  }
+
+  .mobile-rating-section {
+    display: none !important;
   }
 }
