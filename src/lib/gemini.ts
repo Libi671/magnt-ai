@@ -63,10 +63,24 @@ export async function summarizeConversation(
     .map((msg) => `${msg.role === "user" ? "משתמש" : "בוט"}: ${msg.content}`)
     .join("\n");
 
-  const result = await model.generateContent(
-    `סכם את השיחה הבאה בקצרה (2-3 משפטים בעברית):\n\n${conversationText}`
-  );
+  const prompt = `סכם את השיחה הבאה בעברית בפורמט הבא:
 
+**סיכום השיחה:**
+[סכם בקצרה את השיחה ב-2-3 משפטים]
+
+**כאבים אפשריים:**
+[זהה 2-3 כאבים או בעיות שהליד עלול להתמודד איתם, בהתבסס על השיחה]
+
+**חלומות אפשריים:**
+[זהה 2-3 חלומות או מטרות שהליד עלול לרצות להשיג, בהתבסס על השיחה]
+
+**טיפ לתסריט שיחה:**
+[תן טיפ אחד ספציפי איך להתחיל שיחה עם הליד הזה, בהתבסס על מה שנאמר בשיחה]
+
+השיחה:
+${conversationText}`;
+
+  const result = await model.generateContent(prompt);
   return result.response.text();
 }
 

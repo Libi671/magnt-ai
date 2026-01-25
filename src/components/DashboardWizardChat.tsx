@@ -559,7 +559,8 @@ ${data.facebookPost}
                     }}
                 >
                     {/* Avatar - top right corner outside the box */}
-                    {!showSummary && (
+                    {/* TODO: צריך לשפר את העיצוב של האווטר הזה בהמשך */}
+                    {/* {!showSummary && (
                         <div style={{
                             position: 'absolute',
                             top: '-60px',
@@ -582,7 +583,7 @@ ${data.facebookPost}
                                 }}
                             />
                         </div>
-                    )}
+                    )} */}
                     {/* Chat Messages */}
                     <div
                         ref={chatContainerRef}

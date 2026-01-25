@@ -25,7 +25,7 @@ export default async function DashboardLayout({
         {/* Logo */}
         <Link href="/dashboard" className="header-logo">
           <img
-            src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
+            src="/logo.png"
             alt="Magnt.AI"
             style={{ height: '55px' }}
           />
