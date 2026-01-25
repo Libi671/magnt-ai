@@ -51,6 +51,12 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   const [firstBotResponseReceived, setFirstBotResponseReceived] = useState(false)
   const [pendingBotResponse, setPendingBotResponse] = useState<string | null>(null)
   const [firstBotResponse, setFirstBotResponse] = useState<string | null>(null)
+  
+  // Email notification state
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<{ success: boolean; message: string } | null>(null)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
+  const [diagnosticInfo, setDiagnosticInfo] = useState<Record<string, any> | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -71,8 +77,16 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
           setUserPhone(phone)
           setUserEmail(email)
           setCollectionStep('done')
+          console.log('Loading cached user info, creating/finding lead...')
           createLead(name, phone, email).then(lead => {
-            if (lead) setLeadId(lead.id)
+            if (lead) {
+              console.log('Lead found/created from cache, setting leadId to:', lead.id)
+              setLeadId(lead.id)
+            } else {
+              console.error('Failed to create/find lead from cache')
+            }
+          }).catch(error => {
+            console.error('Error in createLead from cache:', error)
           })
         }
       } catch (e) {
@@ -101,23 +115,37 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
   }
 
   const createLead = async (name: string, phone: string, email: string) => {
-    const supabase = createClient()
-    const { data: lead, error } = await supabase
-      .from('leads')
-      .insert({
-        task_id: task.id,
-        phone: phone,
-        name: name,
-        email: email,
+    try {
+      console.log('Creating lead via API:', { taskId: task.id, name, phone, email })
+      
+      const response = await fetch('/api/create-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: task.id,
+          name: name,
+          phone: phone,
+          email: email,
+        }),
       })
-      .select()
-      .single()
 
-    if (error) {
-      console.error('Error creating lead:', error)
+      const data = await response.json()
+
+      if (data.error) {
+        console.error('Error creating lead via API:', data)
+        return null
+      }
+
+      if (data.success && data.lead) {
+        console.log('Lead created/updated successfully via API:', data.lead)
+        return data.lead
+      }
+
+      return null
+    } catch (error) {
+      console.error('Error in createLead function:', error)
       return null
     }
-    return lead
   }
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -169,10 +197,27 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
       ])
       setCollectionStep('done')
 
+      console.log('Creating lead with:', { userName, userPhone, email: userMessage, taskId: task.id })
       const lead = await createLead(userName, userPhone, userMessage)
       if (lead) {
+        console.log('Lead created/updated successfully, setting leadId to:', lead.id)
         setLeadId(lead.id)
         saveUserInfoToCache(userName, userPhone, userMessage)
+      } else {
+        console.error('Failed to create/update lead - lead is null')
+        // Try to find existing lead as fallback
+        const supabase = createClient()
+        const { data: existingLead } = await supabase
+          .from('leads')
+          .select('id')
+          .eq('task_id', task.id)
+          .or(`email.eq.${userMessage},phone.eq.${userPhone}`)
+          .maybeSingle()
+        
+        if (existingLead) {
+          console.log('Found existing lead as fallback:', existingLead.id)
+          setLeadId(existingLead.id)
+        }
       }
 
       if (firstBotResponse) {
@@ -231,6 +276,171 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
     }
   }
 
+  const sendNotificationEmail = async (showDiagnosticInfo = false) => {
+    if (!leadId) {
+      setEmailStatus({ success: false, message: '❌ אין ID של ליד - לא ניתן לשלוח אימייל' })
+      return
+    }
+
+    setEmailSending(true)
+    setEmailStatus(null)
+
+    try {
+      const response = await fetch('/api/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: task.id,
+          leadId: leadId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        console.error('Email sending error:', data)
+        setEmailStatus({ 
+          success: false, 
+          message: `❌ שגיאה בשליחת אימייל: ${data.details || data.error}` 
+        })
+      } else {
+        console.log('Email sent successfully:', data)
+        setEmailStatus({ 
+          success: true, 
+          message: `✅ אימייל נשלח בהצלחה ל-${data.sentTo}` 
+        })
+      }
+    } catch (error) {
+      console.error('Error sending notification email:', error)
+      setEmailStatus({ 
+        success: false, 
+        message: `❌ שגיאת רשת: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}` 
+      })
+    } finally {
+      setEmailSending(false)
+    }
+  }
+
+  const getDiagnosticInfo = async () => {
+    const supabase = createClient()
+    const diagnostics: Record<string, any> = {
+      leadId: leadId || '❌ אין',
+      userName: userName || '❌ אין',
+      userPhone: userPhone || '❌ אין',
+      userEmail: userEmail || '❌ אין',
+      taskId: task.id,
+    }
+
+    // If we have leadId, get lead info from database
+    if (leadId && leadId !== '❌ אין') {
+      const { data: leadData } = await supabase
+        .from('leads')
+        .select('name, email, phone, rating')
+        .eq('id', leadId)
+        .single()
+
+      if (leadData) {
+        diagnostics.leadName = leadData.name || '❌ אין'
+        diagnostics.leadEmail = leadData.email || '❌ אין'
+        diagnostics.leadPhone = leadData.phone || '❌ אין'
+        diagnostics.leadRating = leadData.rating || '❌ אין'
+      }
+    } else if (userEmail || userPhone) {
+      // Try to find existing lead by email or phone
+      console.log('No leadId found, searching for existing lead by email/phone...')
+      const searchConditions = []
+      if (userEmail) searchConditions.push(`email.eq.${userEmail}`)
+      if (userPhone) searchConditions.push(`phone.eq.${userPhone}`)
+      
+      if (searchConditions.length > 0) {
+        const { data: existingLead, error: searchError } = await supabase
+          .from('leads')
+          .select('id, name, email, phone, rating')
+          .eq('task_id', task.id)
+          .or(searchConditions.join(','))
+          .maybeSingle()
+
+        if (existingLead) {
+          console.log('Found existing lead:', existingLead)
+          diagnostics.leadId = existingLead.id
+          diagnostics.leadName = existingLead.name || '❌ אין'
+          diagnostics.leadEmail = existingLead.email || '❌ אין'
+          diagnostics.leadPhone = existingLead.phone || '❌ אין'
+          diagnostics.leadRating = existingLead.rating || '❌ אין'
+          
+          // Update state with found leadId
+          if (!leadId) {
+            console.log('Setting leadId from found lead:', existingLead.id)
+            setLeadId(existingLead.id)
+          }
+        } else {
+          console.log('No existing lead found, searchError:', searchError)
+          // If we have all user data but no lead, try to create one
+          if (userName && userPhone && userEmail) {
+            console.log('Attempting to create lead with existing user data...')
+            const newLead = await createLead(userName, userPhone, userEmail)
+            if (newLead) {
+              console.log('Successfully created lead:', newLead.id)
+              diagnostics.leadId = newLead.id
+              diagnostics.leadName = newLead.name || '❌ אין'
+              diagnostics.leadEmail = newLead.email || '❌ אין'
+              diagnostics.leadPhone = newLead.phone || '❌ אין'
+              setLeadId(newLead.id)
+            }
+          }
+        }
+      }
+    }
+
+    // Get task info including notify_email and user info
+    const { data: taskData } = await supabase
+      .from('tasks')
+      .select('notify_email, user_id')
+      .eq('id', task.id)
+      .single()
+
+    if (taskData) {
+      diagnostics.taskNotifyEmail = taskData.notify_email || '❌ אין'
+      diagnostics.taskUserId = taskData.user_id || '❌ אין'
+      
+      // Get user email if user_id exists
+      if (taskData.user_id) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('email, name')
+          .eq('id', taskData.user_id)
+          .single()
+        
+        if (userData) {
+          diagnostics.taskUserEmail = userData.email || '❌ אין'
+          diagnostics.taskUserName = userData.name || '❌ אין'
+        }
+      }
+      
+      // Determine recipient email
+      diagnostics.recipientEmail = taskData.notify_email || diagnostics.taskUserEmail || '❌ אין'
+    }
+
+    // Check if we have all required data for sending
+    diagnostics.hasAllData = !!(
+      diagnostics.leadId && 
+      diagnostics.leadId !== '❌ אין' &&
+      diagnostics.recipientEmail && 
+      diagnostics.recipientEmail !== '❌ אין'
+    )
+
+    return diagnostics
+  }
+
+  // Update diagnostic info when relevant data changes
+  useEffect(() => {
+    const updateDiagnostics = async () => {
+      const diag = await getDiagnosticInfo()
+      setDiagnosticInfo(diag)
+    }
+    updateDiagnostics()
+  }, [leadId, userName, userPhone, userEmail, task.id])
+
   const handleComplete = async () => {
     if (rating > 0 && leadId) {
       const supabase = createClient()
@@ -239,6 +449,10 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         .update({ rating })
         .eq('id', leadId)
     }
+    
+    // Send email notification when task is completed
+    await sendNotificationEmail(false)
+    
     setCompleted(true)
   }
 
@@ -619,9 +833,200 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
                 </button>
               ))}
             </div>
-            <button onClick={handleComplete} className="btn btn-accent" style={{ padding: '10px 24px' }}>
+            <button onClick={handleComplete} className="btn btn-accent" style={{ padding: '10px 24px', marginBottom: '12px' }}>
               סיים וקבל את התוצאה
             </button>
+            
+            {/* Send Now Button for Testing */}
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+              <button 
+                onClick={async () => {
+                  setShowDiagnostics(!showDiagnostics)
+                  if (!showDiagnostics) {
+                    const diag = await getDiagnosticInfo()
+                    setDiagnosticInfo(diag)
+                  }
+                }}
+                disabled={emailSending}
+                className="btn btn-secondary" 
+                style={{ 
+                  padding: '12px 24px',
+                  marginBottom: '12px',
+                  width: '100%',
+                  cursor: emailSending ? 'not-allowed' : 'pointer',
+                  opacity: emailSending ? 0.6 : 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '8px',
+                  textAlign: 'right'
+                }}
+              >
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{emailSending ? '⏳ שולח...' : showDiagnostics ? '🔽 הסתר' : '📧 הצג מידע דיאגנוסטי ושלח אימייל'}</span>
+                </div>
+                {diagnosticInfo && !showDiagnostics && (
+                  <div style={{ 
+                    width: '100%', 
+                    fontSize: '0.85rem', 
+                    color: 'var(--text-secondary)',
+                    paddingTop: '8px',
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Lead ID:</span>
+                      <span style={{ color: diagnosticInfo.leadId !== '❌ אין' ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                        {diagnosticInfo.leadId !== '❌ אין' ? '✅' : '❌'} {diagnosticInfo.leadId}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>שם:</span>
+                      <span style={{ color: (diagnosticInfo.leadName && diagnosticInfo.leadName !== '❌ אין') || (diagnosticInfo.userName && diagnosticInfo.userName !== '❌ אין') ? '#22c55e' : '#ef4444' }}>
+                        {(diagnosticInfo.leadName && diagnosticInfo.leadName !== '❌ אין') || (diagnosticInfo.userName && diagnosticInfo.userName !== '❌ אין') ? '✅' : '❌'} {diagnosticInfo.leadName || diagnosticInfo.userName || '❌ אין'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>אימייל:</span>
+                      <span style={{ color: (diagnosticInfo.leadEmail && diagnosticInfo.leadEmail !== '❌ אין') || (diagnosticInfo.userEmail && diagnosticInfo.userEmail !== '❌ אין') ? '#22c55e' : '#ef4444' }}>
+                        {(diagnosticInfo.leadEmail && diagnosticInfo.leadEmail !== '❌ אין') || (diagnosticInfo.userEmail && diagnosticInfo.userEmail !== '❌ אין') ? '✅' : '❌'} {diagnosticInfo.leadEmail || diagnosticInfo.userEmail || '❌ אין'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>אימייל יעד:</span>
+                      <span style={{ color: diagnosticInfo.recipientEmail && diagnosticInfo.recipientEmail !== '❌ אין' ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                        {diagnosticInfo.recipientEmail && diagnosticInfo.recipientEmail !== '❌ אין' ? '✅' : '❌'} {diagnosticInfo.recipientEmail || '❌ אין'}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                      <strong style={{ color: diagnosticInfo.hasAllData ? '#22c55e' : '#ef4444' }}>
+                        {diagnosticInfo.hasAllData ? '✅ מוכן לשליחה' : '❌ חסרים נתונים'}
+                      </strong>
+                    </div>
+                  </div>
+                )}
+              </button>
+              
+              {/* Diagnostic Info - Always show when expanded */}
+              {showDiagnostics && diagnosticInfo && (
+                <div style={{
+                  background: 'rgba(40, 40, 55, 0.9)',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                  textAlign: 'right',
+                  fontSize: '0.9rem',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  <p style={{ marginBottom: '16px', fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '1rem' }}>
+                    🔍 מידע דיאגנוסטי לשליחת אימייל:
+                  </p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: 'var(--text-secondary)' }}>
+                    <div style={{ 
+                      padding: '12px', 
+                      background: 'rgba(102, 126, 234, 0.1)', 
+                      borderRadius: '6px',
+                      border: '1px solid rgba(102, 126, 234, 0.2)'
+                    }}>
+                      <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>📋 פרטי הליד:</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div><strong>Lead ID:</strong> <span style={{ color: diagnosticInfo.leadId !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadId}</span></div>
+                        <div><strong>שם:</strong> <span style={{ color: diagnosticInfo.leadName && diagnosticInfo.leadName !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadName || diagnosticInfo.userName}</span></div>
+                        <div><strong>טלפון:</strong> <span style={{ color: diagnosticInfo.leadPhone && diagnosticInfo.leadPhone !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadPhone || diagnosticInfo.userPhone}</span></div>
+                        <div><strong>אימייל:</strong> <span style={{ color: diagnosticInfo.leadEmail && diagnosticInfo.leadEmail !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.leadEmail || diagnosticInfo.userEmail}</span></div>
+                        {diagnosticInfo.leadRating && diagnosticInfo.leadRating !== '❌ אין' && (
+                          <div><strong>דירוג:</strong> {diagnosticInfo.leadRating}/5</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ 
+                      padding: '12px', 
+                      background: 'rgba(118, 75, 162, 0.1)', 
+                      borderRadius: '6px',
+                      border: '1px solid rgba(118, 75, 162, 0.2)'
+                    }}>
+                      <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>🎯 פרטי המשימה:</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div><strong>Task ID:</strong> {diagnosticInfo.taskId}</div>
+                        <div><strong>User ID (יוצר):</strong> <span style={{ color: diagnosticInfo.taskUserId !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskUserId}</span></div>
+                        <div><strong>שם יוצר:</strong> <span style={{ color: diagnosticInfo.taskUserName && diagnosticInfo.taskUserName !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskUserName || '❌ אין'}</span></div>
+                      </div>
+                    </div>
+
+                    <div style={{ 
+                      padding: '12px', 
+                      background: diagnosticInfo.hasAllData ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                      borderRadius: '6px',
+                      border: `1px solid ${diagnosticInfo.hasAllData ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                    }}>
+                      <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>📧 פרטי שליחת אימייל:</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div><strong>Notify Email (מועדף):</strong> <span style={{ color: diagnosticInfo.taskNotifyEmail !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskNotifyEmail}</span></div>
+                        <div><strong>User Email (גיבוי):</strong> <span style={{ color: diagnosticInfo.taskUserEmail !== '❌ אין' ? '#22c55e' : '#ef4444' }}>{diagnosticInfo.taskUserEmail}</span></div>
+                        <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                          <strong>📬 אימייל יעד (סופי):</strong> <span style={{ 
+                            color: diagnosticInfo.recipientEmail !== '❌ אין' ? '#22c55e' : '#ef4444',
+                            fontWeight: 'bold',
+                            fontSize: '1rem'
+                          }}>{diagnosticInfo.recipientEmail}</span>
+                        </div>
+                        <div style={{ marginTop: '8px' }}>
+                          <strong>סטטוס:</strong> <span style={{ 
+                            color: diagnosticInfo.hasAllData ? '#22c55e' : '#ef4444',
+                            fontWeight: 'bold'
+                          }}>
+                            {diagnosticInfo.hasAllData ? '✅ כל הנתונים זמינים - ניתן לשלוח' : '❌ חסרים נתונים - לא ניתן לשלוח'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      await sendNotificationEmail(true)
+                    }}
+                    disabled={emailSending || !diagnosticInfo.hasAllData}
+                    style={{
+                      marginTop: '16px',
+                      padding: '12px 24px',
+                      width: '100%',
+                      fontSize: '1rem',
+                      background: diagnosticInfo.hasAllData ? 'var(--gradient-primary)' : 'rgba(100, 100, 100, 0.3)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: 'white',
+                      cursor: (emailSending || !diagnosticInfo.hasAllData) ? 'not-allowed' : 'pointer',
+                      opacity: (emailSending || !diagnosticInfo.hasAllData) ? 0.6 : 1,
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {emailSending ? '⏳ שולח אימייל...' : diagnosticInfo.hasAllData ? '📧 שלח אימייל עכשיו' : '❌ לא ניתן לשלוח - חסרים נתונים'}
+                  </button>
+                </div>
+              )}
+              
+              {/* Email Status */}
+              {emailStatus && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: emailStatus.success 
+                    ? 'rgba(34, 197, 94, 0.1)' 
+                    : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${emailStatus.success ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  color: emailStatus.success ? '#22c55e' : '#ef4444',
+                  fontSize: '0.9rem'
+                }}>
+                  {emailStatus.message}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -721,7 +1126,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
           className="magnt-badge-hover"
         >
           <img
-            src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
+            src="/logo.png"
             alt="Magnt.AI"
             style={{ height: '24px', width: 'auto' }}
           />
@@ -734,7 +1139,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         {/* Brand */}
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img
-            src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
+            src="/logo.png"
             alt="Magnt.AI"
             style={{ height: '28px' }}
           />

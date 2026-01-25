@@ -30,7 +30,7 @@ export default async function LandingPage() {
       <header className="landing-header">
         <Link href="/" className="header-logo">
           <img
-            src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
+            src="/logo.png"
             alt="Magnt.AI"
             style={{ height: '65px' }}
           />
@@ -292,7 +292,7 @@ export default async function LandingPage() {
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <img
-              src="https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/h7SVISj2gc8u4uM3tWvn/pub/HpsRFj9upJPibhNfMR0q.png"
+              src="/logo.png"
               alt="Magnt.AI"
               style={{ height: '30px', opacity: 0.7 }}
             />

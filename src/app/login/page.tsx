@@ -17,7 +17,12 @@ export default function LoginPage() {
   return (
     <div className="lead-gate" style={{ position: 'relative' }}>
       <div className="lead-gate-content glass" style={{ borderRadius: 'var(--radius-xl)' }}>
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+          <img
+            src="/logo.png"
+            alt="Magnt.AI"
+            style={{ height: '60px', marginBottom: '16px' }}
+          />
           <h1 className="glow-text" style={{ fontSize: '2.5rem', fontWeight: 800 }}>
             Magnt.AI
           </h1>
