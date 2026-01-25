@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { FacebookPixel } from "@/components/FacebookPixel";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://magnt.ai';
 
 export const metadata: Metadata = {
   title: "Magnt.AI - אתגרי שיווק מבוססי AI",
   description: "פלטפורמת אתגרי שיווק מבוססת AI לאיסוף לידים וחימום",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "Magnt.AI - אתגרי שיווק מבוססי AI",
     description: "פלטפורמת אתגרי שיווק מבוססת AI לאיסוף לידים וחימום",
@@ -37,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body>
+        <FacebookPixel />
         {children}
       </body>
     </html>

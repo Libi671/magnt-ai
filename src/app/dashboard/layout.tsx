@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import MobileNav from '@/components/MobileNav'
+import LoginTracker from '@/components/LoginTracker'
 
 export default async function DashboardLayout({
   children,
@@ -17,6 +18,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="dashboard-layout-new">
+      {/* Facebook Pixel - Track Login */}
+      <LoginTracker />
+      
       {/* Top Header Navigation */}
       <header className="dashboard-header">
         {/* Mobile Navigation - appears first for RTL (right side) */}

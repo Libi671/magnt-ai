@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { fbEvents } from './FacebookPixel'
 
 const words = ['למגנט לקוחות', 'לממיר']
 
@@ -105,6 +106,11 @@ export default function HeroSection() {
     }, [messages, loading])
 
     const sendMessage = async (userMessage: string) => {
+        // Track first chat interaction - אירוע 3: התחלת שיחה בצ'אט
+        if (messages.length === 1) {
+            fbEvents.initiateChat();
+        }
+        
         // Add user message
         setMessages(prev => [...prev, { role: 'user', content: userMessage }])
         setLoading(true)

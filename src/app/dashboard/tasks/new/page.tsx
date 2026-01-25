@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { fbEvents } from '@/components/FacebookPixel'
 
 interface Message {
   role: 'bot' | 'user' | 'system'
@@ -531,6 +532,9 @@ ${data.facebookPost}
         .single()
 
       if (error) throw error
+
+      // אירוע 5: יצירת אתגר חדש
+      fbEvents.createChallenge(taskData.title);
 
       addBotMessage('🎉 המגנט נוצר בהצלחה!')
       setStep('done')

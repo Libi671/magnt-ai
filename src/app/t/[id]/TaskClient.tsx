@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useState, useRef, useEffect } from 'react'
 import MagntBadge from '@/components/MagntBadge'
 import Link from 'next/link'
+import { fbEvents } from '@/components/FacebookPixel'
 
 interface Message {
   role: 'user' | 'model' | 'system'
@@ -646,6 +647,10 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
     // Send email notification when task is completed (Remote logic)
     await sendNotificationEmail(false)
     setEmailSent(true) // Prevent abandonment email (Local logic)
+    
+    // אירוע 6: ביצוע/השלמת אתגר
+    fbEvents.completeChallenge(task.title);
+    
     setCompleted(true)
   }
 

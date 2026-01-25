@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import HeroSection from '@/components/HeroSection'
 import PricingSection from '@/components/PricingSection'
+import LandingPageTracker from '@/components/LandingPageTracker'
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -26,6 +27,9 @@ export default async function LandingPage() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      {/* Facebook Pixel - Landing Page View */}
+      <LandingPageTracker />
+      
       {/* Header */}
       <header className="landing-header">
         <Link href="/" className="header-logo">
