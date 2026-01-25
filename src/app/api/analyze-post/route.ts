@@ -183,10 +183,14 @@ ${closingInstruction}
         // Action: generate_first_question - Generate opening question
         if (action === 'generate_first_question') {
             const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
-            const prompt = `כתוב שאלה פותחת לבוט בנושא: "${topic}"
+            const prompt = `כתוב שאלת פתיחה מזמינה לאתגר בנושא: "${topic}"
 ${description ? `תיאור: "${description}"` : ''}
 
-דרישות:
+דרישות חשובות:
+- השאלה חייבת להיות קלה למענה - כזו שהתשובה עליה היא "כן", "רוצה", או "בטח"
+- הבן מה המטרה של האתגר ושאל את המשתמש אם הוא רוצה להשיג אותה
+- השתמש במבנה כמו: "רוצה ל[מטרת האתגר]?" או "מוכן ל[מטרת האתגר]?"
+- דוגמאות לשאלות טובות: "רוצה ללמוד איך לכתוב פוסט שמושך לקוחות? 🎯", "מוכן לגלות את הסוד לתוכן ויראלי? ✨"
 - שאלה אחת בלבד
 - עד 15 מילים
 - כוללת אימוג'י אחד בסוף
