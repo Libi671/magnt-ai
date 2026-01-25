@@ -7,7 +7,7 @@ export default function TermsPage() {
             <header className="landing-header">
                 <Link href="/" className="header-logo">
                     <img
-                        src="/logo.png"
+                        src="/logo_background.png"
                         alt="Magnt.AI"
                         style={{ height: '65px' }}
                     />
@@ -132,7 +132,7 @@ export default function TermsPage() {
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div>
                         <img
-                            src="/logo.png"
+                            src="/logo_background.png"
                             alt="Magnt.AI"
                             style={{ height: '30px', opacity: 0.7 }}
                         />

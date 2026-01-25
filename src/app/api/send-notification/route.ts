@@ -1,14 +1,11 @@
-import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Lazy initialization to avoid build-time errors
-let resendClient: Resend | null = null;
-function getResend(): Resend {
-  if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resendClient;
+// Use dynamic import to prevent Resend from being initialized during build
+async function getResend() {
+  const { Resend } = await import('resend');
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
 // Create Supabase client - use service role key if available (bypasses RLS), fallback to anon key
@@ -237,7 +234,8 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const { data: emailData, error: emailError } = await getResend().emails.send({
+    const resend = await getResend();
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'Magnt.AI <noreply@magnt.ai>',
       to: recipientEmail,
       subject: emailSubject,

@@ -36,7 +36,7 @@ export default async function AboutPage() {
                 {/* Logo on right (RTL) */}
                 <Link href="/dashboard" className="header-logo">
                     <img
-                        src="/logo.png"
+                        src="/logo_background.png"
                         alt="Magnt.AI"
                         style={{ height: '55px' }}
                     />
@@ -517,7 +517,7 @@ export default async function AboutPage() {
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div>
                         <img
-                            src="/logo.png"
+                            src="/logo_background.png"
                             alt="Magnt.AI"
                             style={{ height: '30px', opacity: 0.7 }}
                         />

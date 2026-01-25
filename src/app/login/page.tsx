@@ -19,7 +19,7 @@ export default function LoginPage() {
       <div className="lead-gate-content glass" style={{ borderRadius: 'var(--radius-xl)' }}>
         <div style={{ marginBottom: '24px', textAlign: 'center' }}>
           <img
-            src="/logo.png"
+            src="/logo_background.png"
             alt="Magnt.AI"
             style={{ height: '60px', marginBottom: '16px' }}
           />

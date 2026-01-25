@@ -32,7 +32,7 @@ export default function MagntBadge() {
                 className="magnt-badge"
             >
                 <img
-                    src="/logo.png"
+                    src="/logo_background.png"
                     alt="Magnt.AI"
                     style={{ height: '32px', width: 'auto' }}
                 />

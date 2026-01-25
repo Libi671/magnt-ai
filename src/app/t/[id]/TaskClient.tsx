@@ -1302,7 +1302,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
           className="magnt-badge-hover"
         >
           <img
-            src="/logo.png"
+            src="/logo_background.png"
             alt="Magnt.AI"
             style={{ height: '24px', width: 'auto' }}
           />
@@ -1315,7 +1315,7 @@ export default function TaskClient({ task, otherTasks }: { task: Task, otherTask
         {/* Brand */}
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img
-            src="/logo.png"
+            src="/logo_background.png"
             alt="Magnt.AI"
             style={{ height: '28px' }}
           />

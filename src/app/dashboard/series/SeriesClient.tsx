@@ -240,7 +240,7 @@ export default function SeriesClient({ leadsCount = 0, userName = '' }: SeriesCl
                     }}>
                         <div style={{ position: 'relative' }}>
                             <img
-                                src="/logo.png"
+                                src="/logo_background.png"
                                 alt="Magnt AI"
                                 style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             />

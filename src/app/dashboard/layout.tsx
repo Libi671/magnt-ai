@@ -25,7 +25,7 @@ export default async function DashboardLayout({
         {/* Logo */}
         <Link href="/dashboard" className="header-logo">
           <img
-            src="/logo.png"
+            src="/logo_background.png"
             alt="Magnt.AI"
             style={{ height: '55px' }}
           />
