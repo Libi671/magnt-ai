@@ -76,7 +76,7 @@ export default async function AboutPage() {
                         על <span className="glow-text">Magnt.AI</span>
                     </h1>
                     <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                        הפלטפורמה שמאפשרת למאמנים, מטפלים ויועצים להפוך את התוכן שלהם למכונת לידים אוטומטית
+                        הפלטפורמה שמאפשרת למאמנים, מטפלים ויועצים להפוך את התוכן שלהם למכונת טלפונים של אנשים שרוצים לקנות
                     </p>
                 </div>
 
@@ -110,9 +110,9 @@ export default async function AboutPage() {
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                                 <span style={{ fontSize: '2rem' }}>❄️</span>
                                 <div>
-                                    <h3 style={{ marginBottom: '8px', fontSize: '1.2rem' }}>הלידים שלכם קרים מדי</h3>
+                                    <h3 style={{ marginBottom: '8px', fontSize: '1.2rem' }}>האנשים שפונים אליכם קרים מדי</h3>
                                     <p style={{ color: 'var(--text-secondary)' }}>
-                                        הלידים שמגיעים מהרשתות החברתיות לא עברו תהליכי חימום. הם לא מכירים אתכם מספיק ולא מוכנים לקנות.
+                                        האנשים שמגיעים מהרשתות החברתיות לא עברו תהליכי חימום. הם לא מכירים אתכם מספיק ולא מוכנים לקנות.
                                     </p>
                                 </div>
                             </div>
@@ -148,14 +148,14 @@ export default async function AboutPage() {
                 <div className="container">
                     <h2 className="section-title">הפתרון 💡</h2>
                     <p style={{ textAlign: 'center', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto 40px' }}>
-                        Magnt.AI הופך כל פוסט שלכם ל"מגנט לידים" - כלי אינטראקטיבי שאוסף פרטים של מתעניינים <strong style={{ color: 'var(--text-primary)' }}>ומחמם אותם אוטומטית</strong> עד שהם מוכנים לרכישה
+                        Magnt.AI הופך כל פוסט שלכם לתרגיל אינטרקטיבי עם בוט - כלי שאוסף פרטים של מתעניינים <strong style={{ color: 'var(--text-primary)' }}>ומחמם אותם אוטומטית</strong> עד שהם מוכנים לרכישה
                     </p>
 
                     <div className="steps-grid">
                         <div className="step-card">
                             <div className="step-number">1</div>
                             <div className="step-icon">🎯</div>
-                            <h3>צור מגנט</h3>
+                            <h3>צור תרגיל אינטרקטיבי</h3>
                             <p>הגדר נושא, שאלות וזרימת שיחה. ה-AI יוביל את השיחה עם המשתתפים.</p>
                         </div>
 
@@ -176,8 +176,8 @@ export default async function AboutPage() {
                         <div className="step-card">
                             <div className="step-number">4</div>
                             <div className="step-icon">💰</div>
-                            <h3>קבל לידים</h3>
-                            <p>כל משתתף משאיר פרטים. אתה מקבל רשימה של לקוחות פוטנציאליים.</p>
+                            <h3>קבל טלפונים</h3>
+                            <p>כל משתתף משאיר פרטים. אתה מקבל רשימה של אנשים שרוצים לקנות.</p>
                         </div>
 
                         <div className="step-card">
@@ -185,6 +185,17 @@ export default async function AboutPage() {
                             <div className="step-icon">🔄</div>
                             <h3>חימום אוטומטי</h3>
                             <p>המערכת שולחת באופן אוטומטי סדרת מסרים למתעניינים עד שהם מוכנים לרכישה.</p>
+                            <div style={{ 
+                                marginTop: '12px', 
+                                padding: '6px 12px', 
+                                background: 'rgba(102, 126, 234, 0.15)', 
+                                borderRadius: '20px', 
+                                fontSize: '0.85rem', 
+                                color: 'var(--text-secondary)',
+                                display: 'inline-block'
+                            }}>
+                                שירות זה בתשלום
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -200,7 +211,7 @@ export default async function AboutPage() {
                             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🧘</div>
                             <h3 style={{ marginBottom: '12px' }}>מאמנים ומטפלים</h3>
                             <p style={{ color: 'var(--text-secondary)' }}>
-                                הפכו את הפוסטים שלכם לכלי שאוסף לידים של אנשים שמחפשים שינוי
+                                הפכו את הפוסטים שלכם לכלי שאוסף טלפונים של אנשים שמחפשים שינוי
                             </p>
                         </div>
 
@@ -239,11 +250,11 @@ export default async function AboutPage() {
                         border: '1px solid rgba(102, 126, 234, 0.2)'
                     }}>
                         <p style={{ fontSize: '1.1rem', lineHeight: 1.8 }}>
-                            💡 כמה עולה לך היום כל ליד מפייסבוק? <strong>50-100 ש״ח?</strong><br />
+                            💡 כמה עולה לך היום כל טלפון מפייסבוק? <strong>50-100 ש״ח?</strong><br />
                             וכמה מהם באמת הופכים ללקוחות משלמים?
                         </p>
                         <p style={{ color: 'var(--text-secondary)', marginTop: '12px' }}>
-                            עם מערכת חימום אוטומטית, הלידים שלך מגיעים <strong style={{ color: 'var(--text-primary)' }}>מוכנים לקנות</strong>.
+                            עם מערכת חימום אוטומטית, האנשים שפונים אליך מגיעים <strong style={{ color: 'var(--text-primary)' }}>מוכנים לקנות</strong>.
                         </p>
                     </div>
 
@@ -257,10 +268,10 @@ export default async function AboutPage() {
                             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
                                 <ul style={{ listStyle: 'none', marginBottom: '24px' }}>
                                     <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <span style={{ color: '#22c55e' }}>✅</span> מגנטים ללא הגבלה
+                                        <span style={{ color: '#22c55e' }}>✅</span> תרגילים אינטרקטיביים ללא הגבלה
                                     </li>
                                     <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <span style={{ color: '#22c55e' }}>✅</span> עד 25 לידים
+                                        <span style={{ color: '#22c55e' }}>✅</span> עד 25 טלפונים
                                     </li>
                                     <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <span style={{ color: '#22c55e' }}>✅</span> צ׳אט AI מתקדם
@@ -324,10 +335,10 @@ export default async function AboutPage() {
                             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
                                 <ul style={{ listStyle: 'none', marginBottom: '24px' }}>
                                     <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <span style={{ color: '#22c55e' }}>✅</span> מגנטים ללא הגבלה
+                                        <span style={{ color: '#22c55e' }}>✅</span> תרגילים אינטרקטיביים ללא הגבלה
                                     </li>
                                     <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <span style={{ color: '#22c55e' }}>✅</span> לידים ללא הגבלה
+                                        <span style={{ color: '#22c55e' }}>✅</span> טלפונים ללא הגבלה
                                     </li>
                                     <li style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <span style={{ color: '#22c55e' }}>✅</span> צ׳אט AI מתקדם
@@ -387,16 +398,16 @@ export default async function AboutPage() {
 
                     <div style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div className="card" style={{ padding: '24px' }}>
-                            <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>איך זה שונה מלפרסם קישור לדף נחיתה רגיל?</h3>
+                            <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>איך זה שונה מלפרסם קישור לדף נחיתה או לשלוח מדריך בPDF?</h3>
                             <p style={{ color: 'var(--text-secondary)' }}>
-                                מגנט AI יוצר חוויה אינטראקטיבית ואישית עם כל מבקר. במקום טופס קר ומרוחק, הלקוח מנהל שיחה אמיתית עם AI שמבין את הצרכים שלו, וזה מגדיל משמעותית את יחסי ההמרה.
+                                במקום טופס קר או PDF שהם לא עונים עליו, הלקוח מנהל שיחה אמיתית עם בוט שמבין את הצרכים שלו. זה מגדיל משמעותית את מספר האנשים שפונים אליך.
                             </p>
                         </div>
 
                         <div className="card" style={{ padding: '24px' }}>
-                            <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>מה קורה עם הלידים שנאספו?</h3>
+                            <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>מה קורה עם האנשים שפנו אליך?</h3>
                             <p style={{ color: 'var(--text-secondary)' }}>
-                                נשלח לכם מייל מסודר אחרי כל ליד שהשגתם. במייל תקבלו את פרטי הקשר של הליד ודוח מסכם על הלקוח. בנוסף, הלידים נשמרים בדאשבורד שלכם. אתם מקבלים גישה מלאה לפרטים, כולל השם, הטלפון, האימייל ותמליל השיחה המלא.
+                                נשלח לכם מייל מסודר אחרי כל אדם שפנה. במייל תקבלו את פרטי הקשר שלו ודוח מסכם עם מה שהוא צריך ותסריט שיחה. בנוסף תוכלו לשלוח להם סדרת מסרים אוטומטית שמחממת אותם לקנייה.
                             </p>
                         </div>
 
@@ -408,9 +419,9 @@ export default async function AboutPage() {
                         </div>
 
                         <div className="card" style={{ padding: '24px' }}>
-                            <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>כמה זמן לוקח להקים מגנט?</h3>
+                            <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>כמה זמן לוקח להקים תרגיל אינטרקטיבי?</h3>
                             <p style={{ color: 'var(--text-secondary)' }}>
-                                דקות ספורות! אתם מגדירים נושא, כותבים תיאור קצר ושאלה פותחת - והמערכת עושה את השאר. ה-AI יודע לנהל את השיחה בצורה טבעית.
+                                3 דקות! מעלים פוסט שכתבתם או מגדירים נושא וה-AI עושה בשבילך את כל השאר. סקפטי? תפעיל טיימר ותנסה - <Link href="/login" style={{ color: 'var(--primary-start)' }}>התחבר ונסה עכשיו</Link>.
                             </p>
                         </div>
 
@@ -460,7 +471,7 @@ export default async function AboutPage() {
             {/* Feed Section - Updated */}
             <section id="feed" className="section" style={{ background: 'var(--bg-glass)' }}>
                 <div className="container">
-                    <h2 className="section-title">מגנטים פופולריים</h2>
+                    <h2 className="section-title">תרגילים אינטרקטיביים פופולריים</h2>
 
                     {sortedTasks && sortedTasks.length > 0 ? (
                         <>
@@ -484,7 +495,7 @@ export default async function AboutPage() {
                                             {/* CTA */}
                                             <div style={{ marginTop: 'auto' }}>
                                                 <span className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                                                    התחל מגנט →
+                                                    התחל תרגיל →
                                                 </span>
                                             </div>
                                         </div>
@@ -495,7 +506,7 @@ export default async function AboutPage() {
                             {sortedTasks.length > 6 && (
                                 <div style={{ textAlign: 'center', marginTop: '32px' }}>
                                     <Link href="/dashboard/tasks" className="btn btn-secondary">
-                                        לכל המגנטים
+                                        לכל התרגילים
                                     </Link>
                                 </div>
                             )}
@@ -503,7 +514,7 @@ export default async function AboutPage() {
                     ) : (
                         <div className="card" style={{ padding: '60px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
                             <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🎯</div>
-                            <h3 style={{ marginBottom: '12px' }}>עוד אין מגנטים ציבוריים</h3>
+                            <h3 style={{ marginBottom: '12px' }}>עוד אין תרגילים ציבוריים</h3>
                             <p style={{ color: 'var(--text-secondary)' }}>
                                 בקרוב תוכלו לראות כאן מגנטים מרהיבים מיוצרי תוכן וחברות
                             </p>
@@ -525,8 +536,8 @@ export default async function AboutPage() {
                     <Link href="/terms" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
                         תקנון
                     </Link>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        © 2026 Magnt.AI - פלטפורמת מגנטי לידים מבוססת AI
+                    <div className="footer-copyright">
+                        © 2026 Magnt.AI - הופכים את העוקבים ללקוחות באמצעות AI
                     </div>
                 </div>
             </footer>

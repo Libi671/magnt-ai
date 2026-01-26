@@ -60,16 +60,15 @@ export default async function LandingPage() {
         <div className="container">
           <h2 className="section-title">איך זה עובד?</h2>
           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '-20px', marginBottom: '40px' }}>
-            יוצרים מגנט ⬅ מקבלים לידים,<br />
-            יוצרים אתגר ⬅ משיגים לקוחות.
+            בוחרים נושא ⬅ יוצרים תרגיל ⬅ מקבלים טלפונים.
           </p>
 
           <div className="steps-grid">
             <div className="step-card">
               <div className="step-number">1</div>
               <div className="step-icon">🎯</div>
-              <h3>צור מגנט</h3>
-              <p>הכנס פוסט או הגדר נושא. ה-AI יצור לך מגנט לידים עם קישור לשתף.</p>
+              <h3>צור תרגיל אינטרקטיבי</h3>
+              <p>הכנס פוסט או הגדר נושא. ה-AI יצור לך בוט שיחה עם קישור לשתף.</p>
             </div>
 
             <div className="step-card">
@@ -82,15 +81,26 @@ export default async function LandingPage() {
             <div className="step-card">
               <div className="step-number">3</div>
               <div className="step-icon">💰</div>
-              <h3>קבל לידים</h3>
-              <p>כל משתתף משאיר פרטים. אתה מקבל רשימה של לקוחות מעוניינים.</p>
+              <h3>קבל טלפונים</h3>
+              <p>כל משתתף משאיר פרטים. אתה מקבל רשימה של אנשים שרוצים לקנות.</p>
             </div>
 
             <div className="step-card">
               <div className="step-number">4</div>
               <div className="step-icon">🔄</div>
-              <h3>מחממים את הלידים</h3>
-              <p>שולחים באופן אוטומטי למתעניינים סדרת מסרים ומקבלים לידים שרוצים לסלוק.</p>
+              <h3>מחממים את המתעניינים</h3>
+              <p>שולחים באופן אוטומטי למתעניינים סדרת מסרים ומקבלים טלפונים של אנשים מוכנים לקנות.</p>
+              <div style={{ 
+                marginTop: '12px', 
+                padding: '6px 12px', 
+                background: 'rgba(102, 126, 234, 0.15)', 
+                borderRadius: '20px', 
+                fontSize: '0.85rem', 
+                color: 'var(--text-secondary)',
+                display: 'inline-block'
+              }}>
+                שירות זה בתשלום
+              </div>
             </div>
           </div>
         </div>
@@ -99,7 +109,7 @@ export default async function LandingPage() {
       {/* Feed Section - Dark - HIDDEN */}
       <section id="feed" className="section" style={{ display: 'none' }}>
         <div className="container">
-          <h2 className="section-title">מגנטים פופולריים</h2>
+          <h2 className="section-title">תרגילים אינטרקטיביים פופולריים</h2>
 
           {sortedTasks && sortedTasks.length > 0 ? (
             <>
@@ -132,7 +142,7 @@ export default async function LandingPage() {
               {sortedTasks.length >= 6 && (
                 <div style={{ textAlign: 'center', marginTop: '32px' }}>
                   <Link href="/login" className="btn btn-secondary">
-                    לכל המגנטים
+                    לכל התרגילים
                   </Link>
                 </div>
               )}
@@ -140,7 +150,7 @@ export default async function LandingPage() {
           ) : (
             <div className="card" style={{ padding: '60px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
               <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🎯</div>
-              <h3 style={{ marginBottom: '12px' }}>עוד אין מגנטים ציבוריים</h3>
+              <h3 style={{ marginBottom: '12px' }}>עוד אין תרגילים ציבוריים</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
                 היה הראשון ליצור משימה!
               </p>
@@ -164,19 +174,19 @@ export default async function LandingPage() {
             <div className="card" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>איך זה שונה מלפרסם קישור לדף נחיתה או לשלוח מדריך בPDF?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                מגנט AI יוצר חוויה אינטראקטיבית ואישית עם כל מבקר. במקום טופס קר ומרוחק, הלקוח מנהל שיחה אמיתית עם AI שמבין את הצרכים שלו, וזה מגדיל משמעותית את יחסי ההמרה.
+                במקום טופס קר או PDF שהם לא עונים עליו, הלקוח מנהל שיחה אמיתית עם בוט שמבין את הצרכים שלו. זה מגדיל משמעותית את מספר האנשים שפונים אליך.
               </p>
             </div>
 
             <div className="card" style={{ padding: '24px' }}>
-              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>מה קורה עם הלידים שנאספו?</h3>
+              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>מה קורה עם האנשים שפנו אליך?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                נשלח לכם מייל מסודר אחרי כל ליד שהשגתם. במייל תקבלו את פרטי הקשר של הליד ודוח מסכם עם כאבים צרכים ותסריט שיחה של הלקוח. בנוסף תוכלו להעביר את הלידים סדרת חימום על ידי אתגר AI.
+                נשלח לכם מייל מסודר אחרי כל אדם שפנה. במייל תקבלו את פרטי הקשר שלו ודוח מסכם עם מה שהוא צריך ותסריט שיחה. בנוסף תוכלו לשלוח להם סדרת מסרים אוטומטית שמחממת אותם לקנייה.
               </p>
             </div>
 
             <div className="card" style={{ padding: '24px' }}>
-              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>כמה זמן לוקח להקים מגנט?</h3>
+              <h3 style={{ marginBottom: '12px', fontSize: '1.1rem' }}>כמה זמן לוקח להקים תרגיל אינטרקטיבי?</h3>
               <p style={{ color: 'var(--text-secondary)' }}>
                 3 דקות! מעלים פוסט שכתבתם או מגדירים נושא וה-AI עושה בשבילך את כל השאר. סקפטי? תפעיל טיימר ותנסה - <Link href="/login" style={{ color: 'var(--primary-start)' }}>התחבר ונסה עכשיו</Link>.
               </p>
@@ -282,7 +292,7 @@ export default async function LandingPage() {
       <section className="section" style={{ background: 'var(--bg-glass)' }}>
         <div className="container">
           <div className="card cta-card">
-            <h2>הגיע הזמן שלך להפוך למגנט של לקוחות ועסקאות</h2>
+            <h2>הגיע הזמן שלך להפוך את העוקבים ללקוחות</h2>
             <p>הצטרפו לאלפי יוצרים שכבר משתמשים ב-Magnt.AI</p>
             <Link href="/login" className="btn btn-primary btn-large">
               התחילו בחינם עכשיו
@@ -304,8 +314,8 @@ export default async function LandingPage() {
           <Link href="/terms" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
             תקנון
           </Link>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            © 2026 Magnt.AI - פלטפורמת מגנטי לידים מבוססת AI
+          <div className="footer-copyright">
+            © 2026 Magnt.AI - הופכים את העוקבים ללקוחות באמצעות AI
           </div>
         </div>
       </footer>

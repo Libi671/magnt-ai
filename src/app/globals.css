@@ -766,6 +766,14 @@ tr:hover td {
   max-width: 800px;
 }
 
+.hero-title-glow {
+  color: #ffffff;
+  text-shadow: 
+    0 0 8px rgba(102, 126, 234, 0.15),
+    0 0 12px rgba(102, 126, 234, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Typewriter cursor */
 .typewriter-cursor {
   animation: blink 1s infinite;
@@ -1124,6 +1132,18 @@ tr:hover td {
 
   .steps-grid {
     grid-template-columns: 1fr;
+  }
+
+  .landing-footer .container {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .footer-copyright {
+    width: 100%;
+    text-align: center;
+    order: 3;
   }
 
   .cta-card {

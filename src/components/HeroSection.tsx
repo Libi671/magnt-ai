@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { fbEvents } from './FacebookPixel'
 
-const words = ['למגנט לקוחות', 'לממיר']
 
 interface Message {
     role: 'user' | 'model'
@@ -48,10 +47,6 @@ const linkifyText = (text: string) => {
 }
 
 export default function HeroSection() {
-    const [currentWordIndex, setCurrentWordIndex] = useState(0)
-    const [currentText, setCurrentText] = useState('')
-    const [isDeleting, setIsDeleting] = useState(false)
-
     // Chat state
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -59,38 +54,14 @@ export default function HeroSection() {
     const [chatStarted, setChatStarted] = useState(false)
     const chatContainerRef = useRef<HTMLDivElement>(null)
 
-    // Typewriter effect
-    useEffect(() => {
-        const word = words[currentWordIndex]
-
-        const timeout = setTimeout(() => {
-            if (!isDeleting) {
-                if (currentText.length < word.length) {
-                    setCurrentText(word.substring(0, currentText.length + 1))
-                } else {
-                    setTimeout(() => setIsDeleting(true), 2000)
-                }
-            } else {
-                if (currentText.length > 0) {
-                    setCurrentText(word.substring(0, currentText.length - 1))
-                } else {
-                    setIsDeleting(false)
-                    setCurrentWordIndex((prev) => (prev + 1) % words.length)
-                }
-            }
-        }, isDeleting ? 50 : 100)
-
-        return () => clearTimeout(timeout)
-    }, [currentText, isDeleting, currentWordIndex])
-
     // Initialize chat with first message
     useEffect(() => {
         if (!chatStarted) {
             setMessages([{
                 role: 'model',
-                content: 'היי, כאן היועץ לצמיחה עסקית של Magnt AI. רוצה להפסיק להיות תלוי בחסדי האלגוריתם, ולהשיג הרבה יותר לידים ולהגדיל הכנסה?',
+                content: 'היי, כאן היועץ לצמיחה עסקית של Magnt AI. רוצה להפסיק להיות תלוי בחסדי האלגוריתם, ולהשיג הרבה יותר טלפונים של אנשים שרוצים לקנות ולהגדיל הכנסה?',
                 buttons: [
-                    { label: 'בטח!', value: 'בטח! אני רוצה להשיג יותר לידים ולהגדיל הכנסה.' },
+                    { label: 'בטח!', value: 'בטח! אני רוצה להשיג יותר טלפונים של אנשים שרוצים לקנות ולהגדיל הכנסה.' },
                     { label: 'לא כרגע', value: 'לא כרגע, אולי בהמשך.' }
                 ]
             }])
@@ -129,7 +100,7 @@ export default function HeroSection() {
 
 לפני שנצלול לפתרון, אני חייב להבין את התמונה המלאה אצלך.
 
-כמה עוקבים יש לך בערך בכל הרשתות החברתיות יחד? וכמה לידים (מתעניינים שהשאירו פרטי קשר) נכנסים לך מהם בפועל בכל חודש?`
+כמה עוקבים יש לך בערך בכל הרשתות החברתיות יחד? וכמה טלפונים של אנשים שרוצים לקנות נכנסים לך מהם בפועל בכל חודש?`
                 } else {
                     firstResponse = `אני מבין, אבל תן לי רק לשאול שאלה אחת קטנה שתעזור לך להבין את הפוטנציאל שלך:
 
@@ -195,23 +166,16 @@ export default function HeroSection() {
         <section className="hero-section">
             <div className="hero-glow" />
 
-            {/* Badge */}
-            <div className="hero-badge">✨ מפוסט לסליקה באמצעות מגנט AI</div>
 
-            <h1 className="hero-title">
-                הפכו כל פוסט{' '}
-                <span className="glow-text">
-                    {currentText}
-                    <span className="typewriter-cursor">|</span>
-                </span>
+            {/* Badge */}
+            <div className="hero-badge">✨ מעוקב ללקוח - באמצעות תרגיל עם בוט</div>
+
+            <h1 className="hero-title hero-title-glow">
+                הופכים את העוקבים ללקוחות
             </h1>
 
             <p className="hero-subtitle" style={{ marginBottom: '15px' }}>
-                נמאס לך להשקיע בתוכן ולקבל &apos;לייקים&apos; במקום לקוחות?
-                <br />
-                יוצרים מגנט ויראלי ואוספים לידים במינימום מאמץ.
-                <br />
-                ה-AI שלנו ינהל את השיחה, ויביא לך לקוחות חמים לסגירה.
+                מוסיפים לפוסט קישור לתרגיל אינטרקטיבי עם בוט - ומקבלים באיימיל טלפונים של אנשים שרוצים לרכוש.
             </p>
 
             {/* Separator Line */}
@@ -226,7 +190,7 @@ export default function HeroSection() {
 
             {/* Interactive Chat */}
             <div className="hero-chat-preview">
-                <h3 className="hero-chat-title">🎯 הדגמה חיה: גלה איך להפוך למגנט של לקוחות ועסקאות</h3>
+                <h3 className="hero-chat-title">🎯 הדגמה חיה: גלה איך להפוך את העוקבים ללקוחות</h3>
 
                 <div className="hero-chat-window" style={{
                     boxShadow: '0 0 40px rgba(102, 126, 234, 0.3), 0 0 80px rgba(102, 126, 234, 0.15)',
@@ -348,7 +312,7 @@ export default function HeroSection() {
 
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                     <Link href="/login" className="btn btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
-                        צור מגנט כמו זה בחינם
+                        צור תרגיל אינטרקטיבי כמו זה בחינם
                     </Link>
                 </div>
 
@@ -356,7 +320,7 @@ export default function HeroSection() {
                 <div className="hero-trust-badges">
                     <span>✓ ללא כרטיס אשראי</span>
                     <span>✓ התחילו תוך 3 דקות</span>
-                    <span>✓ קבלו 25 לידים ראשונים בחינם</span>
+                    <span>✓ קבלו 25 לקוחות פוטנציאליים ראשונים בחינם</span>
                 </div>
             </div>
         </section>

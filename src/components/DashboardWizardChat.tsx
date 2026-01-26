@@ -141,14 +141,16 @@ export default function DashboardWizardChat() {
         initialized.current = true
 
         addBotMessage(
-            `שלום 🤖
+            `שלום! 👋
 
-אני כאן לעזור לך להפוך את הפוסט שלך למגנט לידים
+אני כאן לעזור לך ליצור בוט שיחה שיביא לך טלפונים של אנשים שרוצים לקנות.
 
-מגנט לידים הוא כלי חכם שעובד דרך האתר או הרשתות החברתיות שלך.
-מפרסמים אותו באתר, מתחת פוסט שלך או כפוסט חדש, כשמישהו לוחץ על הקישור - הוא מקבל חוויה אינטראקטיבית, ואתה מקבל את הפרטים שלו + מידע עמוק מהשיחה.
+איך זה עובד?
+1. ניצור בוט שמנהל שיחה עם העוקבים שלך
+2. תשתפ/י את הקישור ברשתות החברתיות שלך
+3. מקבלים באימייל את הטלפונים שלהם
 
-בוא נתחיל! יש לך פוסט קיים שתרצה להוסיף לו מגנט, או שנתחיל מאפס?`,
+בואו נתחיל! יש לך פוסט קיים, או שנתחיל מאפס?`,
             [
                 { label: '✨ מתחילים מאפס', value: 'magnet' },
                 { label: '📱 מתחילים מפוסט', value: 'post' }
@@ -192,9 +194,9 @@ export default function DashboardWizardChat() {
                 } else {
                     setCurrentPath('magnet')
                     addBotMessage(
-                        `נהדר! בוא ניצור מגנט לידים מאפס 🚀
+                        `נהדר! בוא ניצור תרגיל אינטרקטיבי מאפס 🚀
 
-מה הנושא שאתה רוצה ליצור עליו מגנט?
+מה הנושא שאתה רוצה ליצור עליו תרגיל?
 
 (לדוגמה: "איך לכתוב פוסט ויראלי" או "טיפים למכירת מוצר")`
                     )
@@ -207,7 +209,7 @@ export default function DashboardWizardChat() {
                     setTaskData(prev => ({ ...prev, title: suggestedTopic }))
                     generateDescription(suggestedTopic)
                 } else {
-                    addBotMessage('בסדר, מה הנושא שאתה רוצה למגנט הלידים?')
+                    addBotMessage('בסדר, מה הנושא שאתה רוצה ליצור עליו תרגיל?')
                     setStep('topic_manual')
                 }
                 break
@@ -217,7 +219,7 @@ export default function DashboardWizardChat() {
                     setTaskData(prev => ({ ...prev, description: suggestedDescription }))
                     generatePrompt()
                 } else {
-                    addBotMessage('בסדר, תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?')
+                    addBotMessage('בסדר, תאר בקצרה - מה המשתמש יקבל מהתרגיל הזה?')
                     setStep('description_input')
                 }
                 break
@@ -237,7 +239,17 @@ export default function DashboardWizardChat() {
                     if (currentPath === 'magnet') {
                         generateFacebookPost()
                     } else {
-                        addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+                        addBotMessage(`🎉 הכל מוכן!
+
+📋 מה הלאה?
+1. תקבל קישור מיוחד - העתק אותו
+2. שתף את הקישור בפוסט שלך בפייסבוק/אינסטגרם
+3. כל מי שלוחץ על הקישור - מדבר עם הבוט
+4. תקבל באימייל את הטלפונים שלהם
+
+💡 טיפ: הוסף לפוסט משפט כמו 'לוחצים על הקישור ומקבלים תרגיל חינם'
+
+לחץ על "סיום ויצירה" לשמור את התרגיל.`)
                         setStep('preview')
                     }
                 } else {
@@ -287,7 +299,17 @@ export default function DashboardWizardChat() {
                 if (currentPath === 'magnet') {
                     generateFacebookPost()
                 } else {
-                    addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+                    addBotMessage(`🎉 הכל מוכן!
+
+📋 מה הלאה?
+1. תקבל קישור מיוחד - העתק אותו
+2. שתף את הקישור בפוסט שלך בפייסבוק/אינסטגרם
+3. כל מי שלוחץ על הקישור - מדבר עם הבוט
+4. תקבל באימייל את הטלפונים שלהם
+
+💡 טיפ: הוסף לפוסט משפט כמו 'לוחצים על הקישור ומקבלים תרגיל חינם'
+
+לחץ על "סיום ויצירה" לשמור את התרגיל.`)
                     setStep('preview')
                 }
                 break
@@ -321,7 +343,7 @@ export default function DashboardWizardChat() {
                 addBotMessage(
                     `קראתי את הפוסט שלך! 📖
 
-מציע להוסיף מגנט לידים בנושא:
+מציע להוסיף תרגיל אינטרקטיבי בנושא:
 "${data.suggestedTopic}"
 
 מה אתה אומר?`,
@@ -344,7 +366,10 @@ export default function DashboardWizardChat() {
     const generateDescription = async (topic: string) => {
         setLoading(true)
         setStep('description_generating')
-        addBotMessage('💭 חושב מה המשתמשים יקבלו מהמגנט הזה...')
+        addBotMessage(`💭 חושב מה המשתמשים יקבלו מהתרגיל הזה...
+
+💡 מה זה תיאור?
+זה מה שכל אדם יראה כשהוא נכנס לתרגיל - הסבר קצר על מה הוא הולך לקבל.`)
 
         try {
             const response = await fetch('/api/analyze-post', {
@@ -361,7 +386,7 @@ export default function DashboardWizardChat() {
             if (data.suggestedDescription) {
                 setSuggestedDescription(data.suggestedDescription)
                 addBotMessage(
-                    `הנה הצעה לתיאור מה המשתמשים יקבלו מהמגנט:
+                    `הנה הצעה לתיאור מה המשתמשים יקבלו מהתרגיל:
 
 "${data.suggestedDescription}"
 
@@ -373,12 +398,12 @@ export default function DashboardWizardChat() {
                 )
                 setStep('description_suggestion')
             } else {
-                addBotMessage('תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?')
+                addBotMessage('תאר בקצרה - מה המשתמש יקבל מהתרגיל הזה?')
                 setStep('description_input')
             }
         } catch (error) {
             console.error('Error generating description:', error)
-            addBotMessage('תאר בקצרה - מה המשתמש יקבל מהמגנט הזה?')
+            addBotMessage('תאר בקצרה - מה המשתמש יקבל מהתרגיל הזה?')
             setStep('description_input')
         } finally {
             setLoading(false)
@@ -388,7 +413,11 @@ export default function DashboardWizardChat() {
     const generatePrompt = async () => {
         setLoading(true)
         setStep('generating_prompt')
-        addBotMessage('⚙️ יוצר הנחיות לבוט...')
+        addBotMessage(`⚙️ יוצר הנחיות לבוט...
+
+💡 מה זה הנחיות?
+זה ההוראות שאני נותן לבוט - איך הוא צריך לדבר, מה לשאול, ואיך לעזור לאנשים.
+אני אכין אותן לפי הנושא שלך, ואתה יכול לשנות אם תרצה.`)
 
         try {
             const response = await fetch('/api/analyze-post', {
@@ -407,7 +436,7 @@ export default function DashboardWizardChat() {
             if (data.generatedPrompt) {
                 setSuggestedPrompt(data.generatedPrompt)
                 addBotMessage(
-                    `הנה ההנחיות שהכנתי למגנט הלידים שלך:
+                    `הנה ההנחיות שהכנתי לתרגיל שלך:
 
 ${data.generatedPrompt}
 
@@ -433,7 +462,10 @@ ${data.generatedPrompt}
     const generateFirstQuestion = async () => {
         setLoading(true)
         setStep('generating_question')
-        addBotMessage('✨ יוצר שאלה פותחת...')
+        addBotMessage(`✨ יוצר שאלה פותחת...
+
+💡 מה זה שאלה פותחת?
+זו השאלה הראשונה שהבוט ישאל כל אדם שפונה אליך. היא צריכה להיות מעניינת ולגרום להם להמשיך את השיחה.`)
 
         try {
             const response = await fetch('/api/analyze-post', {
@@ -493,21 +525,47 @@ ${data.generatedPrompt}
             if (data.facebookPost) {
                 setGeneratedFacebookPost(data.facebookPost)
                 addBotMessage(
-                    `📱 הנה הצעה לפוסט פייסבוק שיכול להתאים למגנט הזה:
+                    `📱 הנה הצעה לפוסט פייסבוק שיכול להתאים לתרגיל הזה:
 
 ${data.facebookPost}
 
-💡 טיפ: כשהמגנט יהיה מוכן, שלח את הפוסט הזה ברשת החברתית בצירוף הקישור שיווצר.
+💡 טיפ: כשהתרגיל יהיה מוכן, שלח את הפוסט הזה ברשת החברתית בצירוף הקישור שיווצר.
 
-🎉 הכל מוכן! לחץ על "סיום ויצירה" לשמור את המגנט.`
+📋 מה הלאה?
+1. תקבל קישור מיוחד - העתק אותו
+2. שתף את הקישור בפוסט שלך בפייסבוק/אינסטגרם
+3. כל מי שלוחץ על הקישור - מדבר עם הבוט
+4. תקבל באימייל את הטלפונים שלהם
+
+🎉 הכל מוכן! לחץ על "סיום ויצירה" לשמור את התרגיל.`
                 )
             } else {
-                addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+                addBotMessage(`🎉 הכל מוכן!
+
+📋 מה הלאה?
+1. תקבל קישור מיוחד - העתק אותו
+2. שתף את הקישור בפוסט שלך בפייסבוק/אינסטגרם
+3. כל מי שלוחץ על הקישור - מדבר עם הבוט
+4. תקבל באימייל את הטלפונים שלהם
+
+💡 טיפ: הוסף לפוסט משפט כמו 'לוחצים על הקישור ומקבלים תרגיל חינם'
+
+לחץ על "סיום ויצירה" לשמור את התרגיל.`)
             }
             setStep('preview')
         } catch (error) {
             console.error('Error generating Facebook post:', error)
-            addBotMessage('🎉 מעולה! הכל מוכן.\n\nלחץ על "סיום ויצירה" לשמור את המגנט.')
+            addBotMessage(`🎉 הכל מוכן!
+
+📋 מה הלאה?
+1. תקבל קישור מיוחד - העתק אותו
+2. שתף את הקישור בפוסט שלך בפייסבוק/אינסטגרם
+3. כל מי שלוחץ על הקישור - מדבר עם הבוט
+4. תקבל באימייל את הטלפונים שלהם
+
+💡 טיפ: הוסף לפוסט משפט כמו 'לוחצים על הקישור ומקבלים תרגיל חינם'
+
+לחץ על "סיום ויצירה" לשמור את התרגיל.`)
             setStep('preview')
         } finally {
             setLoading(false)
@@ -539,7 +597,7 @@ ${data.facebookPost}
 
             if (error) throw error
 
-            addBotMessage('🎉 המגנט נוצר בהצלחה!')
+                    addBotMessage('🎉 התרגיל נוצר בהצלחה!')
             setStep('done')
 
             if (data) {
@@ -599,7 +657,7 @@ ${data.facebookPost}
                 setShowSuccessModal(true)
             } else {
                 console.error('API error:', data)
-                alert('שגיאה בשמירה, אבל המגנט נוצר בהצלחה!')
+                alert('שגיאה בשמירה, אבל התרגיל נוצר בהצלחה!')
                 setShowPhoneModal(false)
                 setShowSuccessModal(true)
             }
@@ -786,7 +844,7 @@ ${data.facebookPost}
                         display: showSummary ? 'block' : 'none'
                     }}
                 >
-                    <h2 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>📋 סיכום המגנט</h2>
+                            <h2 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>📋 סיכום התרגיל</h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
@@ -796,7 +854,7 @@ ${data.facebookPost}
                                 className="input"
                                 value={taskData.title}
                                 onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}
-                                placeholder="נושא המגנט"
+                                placeholder="נושא התרגיל"
                                 style={{ fontSize: '0.95rem' }}
                             />
                         </div>
@@ -860,7 +918,7 @@ ${data.facebookPost}
                                     className="input"
                                     value={taskData.notify_email}
                                     onChange={(e) => setTaskData(prev => ({ ...prev, notify_email: e.target.value }))}
-                                    placeholder="אימייל לקבלת התראות על לידים"
+                                    placeholder="אימייל לקבלת התראות על טלפונים"
                                     style={{ fontSize: '0.95rem' }}
                                 />
                             </div>
@@ -873,7 +931,7 @@ ${data.facebookPost}
                                         onChange={(e) => setTaskData(prev => ({ ...prev, is_public: e.target.checked }))}
                                         style={{ width: '18px', height: '18px', accentColor: 'var(--primary-start)' }}
                                     />
-                                    <span style={{ fontSize: '0.9rem' }}>הצג את המגנט באופן ציבורי</span>
+                                    <span style={{ fontSize: '0.9rem' }}>הצג את התרגיל באופן ציבורי</span>
                                 </label>
 
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -920,7 +978,7 @@ ${data.facebookPost}
                             יש לנו מתנה בשבילך!
                         </h2>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>
-                            אנחנו מתכוונים לשלוח לך <strong style={{ color: 'var(--text-primary)' }}>סדנה דיגיטלית של 7 ימים</strong> - איך להפוך למגנט לידים!
+                            אנחנו מתכוונים לשלוח לך <strong style={{ color: 'var(--text-primary)' }}>סדנה דיגיטלית של 7 ימים</strong> - איך להפוך את העוקבים ללקוחות!
                             <br /><br />
                             תקבל טיפים יומיים, כלים מעשיים ותובנות שיעזרו לך למשוך יותר לקוחות.
                         </p>
@@ -1011,7 +1069,7 @@ ${data.facebookPost}
                     }}>
                         <div className="card" style={{ maxWidth: '500px', width: '100%', padding: '32px', textAlign: 'center', position: 'relative' }}>
                             <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
-                            <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '8px' }}>המגנט מוכן!</h2>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '8px' }}>התרגיל מוכן!</h2>
                             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
                                 עכשיו, כדי שזה יעבוד - עליך לצרף את הקישור לפוסט שלך.
                             </p>

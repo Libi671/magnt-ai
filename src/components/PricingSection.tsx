@@ -26,11 +26,11 @@ export default function PricingSection() {
                         border: '1px solid rgba(102, 126, 234, 0.2)'
                     }}>
                         <p style={{ fontSize: '1.1rem', lineHeight: 1.8 }}>
-                            💡 כמה עולה לך היום כל ליד מפייסבוק? <strong>50-100 ש״ח?</strong><br />
+                            💡 כמה עולה לך היום כל טלפון מפייסבוק? <strong>50-100 ש״ח?</strong><br />
                             וכמה מהם באמת הופכים ללקוחות משלמים?
                         </p>
                         <p style={{ color: 'var(--text-secondary)', marginTop: '12px', marginBottom: '20px' }}>
-                            עם מערכת חימום אוטומטית, הלידים שלך מגיעים <strong style={{ color: 'var(--text-primary)' }}>מוכנים לקנות</strong>.
+                            עם מערכת חימום אוטומטית, האנשים שפונים אליך מגיעים <strong style={{ color: 'var(--text-primary)' }}>מוכנים לקנות</strong>.
                         </p>
 
                         {/* Free tier highlights */}
@@ -42,7 +42,7 @@ export default function PricingSection() {
                         }}>
                             <p style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>מתחילים בחינם:</p>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '12px' }}>
-                                ✅ מגנטים ללא הגבלה  ✅ עד 25 לידים  ✅ צ׳אט AI מתקדם
+                                ✅ תרגילים אינטרקטיביים ללא הגבלה  ✅ עד 25 טלפונים  ✅ צ׳אט AI מתקדם
                             </p>
                             <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>
                                 מתחילים בחינם עכשיו!
@@ -130,10 +130,10 @@ export default function PricingSection() {
                                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
                                     <ul style={{ listStyle: 'none', marginBottom: '20px' }}>
                                         <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ color: '#22c55e' }}>✅</span> מגנטים ללא הגבלה
+                                            <span style={{ color: '#22c55e' }}>✅</span> תרגילים אינטרקטיביים ללא הגבלה
                                         </li>
                                         <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ color: '#22c55e' }}>✅</span> עד 25 לידים
+                                            <span style={{ color: '#22c55e' }}>✅</span> עד 25 טלפונים
                                         </li>
                                         <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <span style={{ color: '#22c55e' }}>✅</span> צ׳אט AI מתקדם
@@ -194,10 +194,10 @@ export default function PricingSection() {
                                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
                                     <ul style={{ listStyle: 'none', marginBottom: '20px' }}>
                                         <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ color: '#22c55e' }}>✅</span> מגנטים ללא הגבלה
+                                            <span style={{ color: '#22c55e' }}>✅</span> תרגילים אינטרקטיביים ללא הגבלה
                                         </li>
                                         <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ color: '#22c55e' }}>✅</span> לידים ללא הגבלה
+                                            <span style={{ color: '#22c55e' }}>✅</span> טלפונים ללא הגבלה
                                         </li>
                                         <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <span style={{ color: '#22c55e' }}>✅</span> צ׳אט AI מתקדם

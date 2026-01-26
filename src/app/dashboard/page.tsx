@@ -39,7 +39,7 @@ export default async function DashboardPage() {
       {/* Page Header with Greeting */}
       <div className="page-header" style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '2rem' }}>שלום {user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'יוצר'}! 👋</h1>
-        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginTop: '8px' }}>נהפוך את הפוסט שלך למגנט לקוחות ועסקאות</p>
+        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginTop: '8px' }}>נוסיף לפוסט שלך תרגיל אינטרקטיבי שיביא לך לקוחות</p>
       </div>
 
       {/* Interactive Wizard Chat */}
