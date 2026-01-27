@@ -560,21 +560,19 @@ ${data.facebookPost}
 
       if (data) {
         setCreatedTask({ id: data.id, title: data.title })
-        // DEBUG: Log the state
-        console.log('Task created! userHasWorkshopConsent:', userHasWorkshopConsent)
+
+        // Always notify admin when a new task is created
+        if (user?.id) {
+          console.log('Notifying admin about new task:', data.id)
+          notifyAdmin(data.id, user.id)
+        }
 
         // If user hasn't consented to workshop yet, show phone modal first
-        // This ensures we ask for phone after completing the challenge
         if (!userHasWorkshopConsent) {
           console.log('Showing phone modal')
-          // If we already have phone, notify now. If not, wait for modal.
-          if (userHasPhone && user?.id) {
-            notifyAdmin(data.id, user.id)
-          }
           setShowPhoneModal(true)
         } else {
           console.log('Showing success modal (user already consented)')
-          if (user?.id) notifyAdmin(data.id, user.id)
           setShowSuccessModal(true)
         }
       }
@@ -618,9 +616,6 @@ ${data.facebookPost}
         setUserHasWorkshopConsent(true)
         setUserHasPhone(true)
         setShowPhoneModal(false)
-        if (createdTask?.id && currentUserId) {
-          notifyAdmin(createdTask.id, currentUserId)
-        }
         setShowSuccessModal(true)
       } else {
         console.error('API error:', data)
@@ -636,10 +631,6 @@ ${data.facebookPost}
       console.error('Error saving phone:', error)
       alert('שגיאה בשמירה, אבל המגנט נוצר בהצלחה!')
       setShowPhoneModal(false)
-      // Still notify admin even if phone save failed
-      if (createdTask?.id && currentUserId) {
-        notifyAdmin(createdTask.id, currentUserId)
-      }
       setShowSuccessModal(true)
     } finally {
       setPhoneLoading(false)
@@ -649,10 +640,6 @@ ${data.facebookPost}
   // Handle phone decline - user doesn't want workshop
   const handlePhoneDecline = () => {
     setShowPhoneModal(false)
-    // Notify even if declined (without phone)
-    if (createdTask?.id && currentUserId && !userHasPhone) {
-      notifyAdmin(createdTask.id, currentUserId)
-    }
     setShowSuccessModal(true)
   }
 
