@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import MobileNav from '@/components/MobileNav'
+import ExercisesSection from '@/components/ExercisesSection'
 
 export default async function AboutPage() {
     const supabase = await createClient()
@@ -185,12 +186,12 @@ export default async function AboutPage() {
                             <div className="step-icon">🔄</div>
                             <h3>חימום אוטומטי</h3>
                             <p>המערכת שולחת באופן אוטומטי סדרת מסרים למתעניינים עד שהם מוכנים לרכישה.</p>
-                            <div style={{ 
-                                marginTop: '12px', 
-                                padding: '6px 12px', 
-                                background: 'rgba(102, 126, 234, 0.15)', 
-                                borderRadius: '20px', 
-                                fontSize: '0.85rem', 
+                            <div style={{
+                                marginTop: '12px',
+                                padding: '6px 12px',
+                                background: 'rgba(102, 126, 234, 0.15)',
+                                borderRadius: '20px',
+                                fontSize: '0.85rem',
                                 color: 'var(--text-secondary)',
                                 display: 'inline-block'
                             }}>
@@ -469,59 +470,7 @@ export default async function AboutPage() {
             </section>
 
             {/* Feed Section - Updated */}
-            <section id="feed" className="section" style={{ background: 'var(--bg-glass)' }}>
-                <div className="container">
-                    <h2 className="section-title">תרגילים אינטרקטיביים פופולריים</h2>
-
-                    {sortedTasks && sortedTasks.length > 0 ? (
-                        <>
-                            <div className="feed-grid">
-                                {sortedTasks.slice(0, 6).map((task) => (
-                                    <Link key={task.id} href={`/t/${task.id}`} style={{ textDecoration: 'none' }}>
-                                        <div className="card task-card" style={{ padding: '24px', height: '100%' }}>
-                                            {/* Task Info */}
-                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '12px', color: 'white' }}>
-                                                {task.title}
-                                            </h3>
-                                            <p style={{
-                                                color: 'var(--text-secondary)',
-                                                fontSize: '0.85rem',
-                                                lineHeight: 1.6,
-                                                marginBottom: '16px'
-                                            }}>
-                                                {task.description?.substring(0, 100)}{task.description?.length > 100 ? '...' : ''}
-                                            </p>
-
-                                            {/* CTA */}
-                                            <div style={{ marginTop: 'auto' }}>
-                                                <span className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                                                    התחל תרגיל →
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-
-                            {sortedTasks.length > 6 && (
-                                <div style={{ textAlign: 'center', marginTop: '32px' }}>
-                                    <Link href="/dashboard/tasks" className="btn btn-secondary">
-                                        לכל התרגילים
-                                    </Link>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="card" style={{ padding: '60px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
-                            <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🎯</div>
-                            <h3 style={{ marginBottom: '12px' }}>עוד אין תרגילים ציבוריים</h3>
-                            <p style={{ color: 'var(--text-secondary)' }}>
-                                בקרוב תוכלו לראות כאן מגנטים מרהיבים מיוצרי תוכן וחברות
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </section>
+            <ExercisesSection tasks={sortedTasks || []} />
 
             {/* Footer */}
             <footer className="landing-footer">
