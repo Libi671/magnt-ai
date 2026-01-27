@@ -1,5 +1,7 @@
 import { chat, summarizeConversation, Message } from '@/lib/gemini'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { logInteraction } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Create a simple Supabase client for API routes (no cookies needed)
@@ -64,6 +66,30 @@ export async function POST(request: NextRequest) {
         console.error('Summary error:', summaryError)
         // Don't fail the whole request if summary fails
       }
+    }
+
+    // Log interaction
+    try {
+      const supabaseServer = await createServerClient()
+      const { data: { user } } = await supabaseServer.auth.getUser()
+
+      await logInteraction({
+        user_type: user ? 'registered' : 'guest',
+        user_id: user?.id,
+        user_email: user?.email,
+        user_name: user?.user_metadata?.full_name || user?.email,
+        interaction_type: 'task_execution',
+        question: message,
+        answer: aiResponse,
+        page_url: request.headers.get('referer') || `/t/${taskId}`,
+        metadata: {
+          task_id: taskId,
+          lead_id: leadId,
+          history_length: history?.length
+        }
+      })
+    } catch (logError) {
+      console.error('Failed to log task chat:', logError)
     }
 
     return NextResponse.json({ response: aiResponse })

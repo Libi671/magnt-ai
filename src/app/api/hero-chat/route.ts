@@ -1,5 +1,7 @@
 import { chat, Message } from '@/lib/gemini'
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { logInteraction } from '@/lib/logger'
 
 // Hero chat system prompt - Growth Advisor
 const HERO_SYSTEM_PROMPT = `הגדרת סוכן AI: היועץ לצמיחה עסקית של Magnt AI
@@ -84,6 +86,26 @@ export async function POST(request: NextRequest) {
         )
 
         console.log('Hero AI response generated:', aiResponse.substring(0, 100))
+
+        // Log interaction
+        try {
+            const supabase = await createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+
+            await logInteraction({
+                user_type: user ? 'registered' : 'guest',
+                user_id: user?.id,
+                user_email: user?.email,
+                user_name: user?.user_metadata?.full_name || user?.email,
+                interaction_type: 'hero_chat',
+                question: message,
+                answer: aiResponse,
+                page_url: request.headers.get('referer') || '/',
+                metadata: { history_length: history?.length }
+            })
+        } catch (logError) {
+            console.error('Failed to log hero chat:', logError)
+        }
 
         return NextResponse.json({ response: aiResponse })
     } catch (error) {

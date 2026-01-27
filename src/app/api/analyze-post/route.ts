@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createClient } from '@/lib/supabase/server'
+import { logInteraction } from '@/lib/logger'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -56,6 +58,25 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const { action, content, topic, description } = body
 
+        // Get user for logging
+        let logUser = null
+        try {
+            const supabase = await createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            logUser = user
+        } catch (e) {
+            // Ignore auth errors, just log as guest if fails
+        }
+
+        const commonLogData = {
+            user_type: (logUser ? 'registered' : 'guest') as 'registered' | 'guest',
+            user_id: logUser?.id,
+            user_email: logUser?.email,
+            user_name: logUser?.user_metadata?.full_name || logUser?.email,
+            interaction_type: 'task_creation' as const,
+            page_url: request.headers.get('referer') || '/dashboard/tasks/new',
+        }
+
         // Action: analyze - Analyze post content and suggest a lead magnet
         if (action === 'analyze') {
             let postContent = content
@@ -102,6 +123,13 @@ export async function POST(request: NextRequest) {
             const result = await model.generateContent(prompt)
             const suggestedTopic = result.response.text().trim()
 
+            await logInteraction({
+                ...commonLogData,
+                question: `Analyze post for topic: ${postContent.substring(0, 200)}...`,
+                answer: suggestedTopic,
+                metadata: { action: 'analyze', extractedUrl }
+            })
+
             return NextResponse.json({
                 success: true,
                 suggestedTopic,
@@ -126,6 +154,13 @@ export async function POST(request: NextRequest) {
 
             const result = await model.generateContent(prompt)
             const suggestedDescription = result.response.text().trim()
+
+            await logInteraction({
+                ...commonLogData,
+                question: `Generate description for topic: ${topic}`,
+                answer: suggestedDescription,
+                metadata: { action: 'generate_description' }
+            })
 
             return NextResponse.json({
                 success: true,
@@ -174,6 +209,13 @@ ${closingInstruction}
             const result = await model.generateContent(prompt)
             const generatedPrompt = result.response.text().trim()
 
+            await logInteraction({
+                ...commonLogData,
+                question: `Generate prompt for topic: ${topic}, desc: ${description}`,
+                answer: generatedPrompt,
+                metadata: { action: 'generate_prompt', postUrl }
+            })
+
             return NextResponse.json({
                 success: true,
                 generatedPrompt
@@ -204,6 +246,13 @@ ${description ? `תיאור: "${description}"` : ''}
             const result = await model.generateContent(prompt)
             const firstQuestion = result.response.text().trim()
 
+            await logInteraction({
+                ...commonLogData,
+                question: `Generate first question for topic: ${topic}`,
+                answer: firstQuestion,
+                metadata: { action: 'generate_first_question' }
+            })
+
             return NextResponse.json({
                 success: true,
                 firstQuestion
@@ -228,6 +277,13 @@ ${description ? `תיאור: "${description}"` : ''}
 
             const result = await model.generateContent(prompt)
             const facebookPost = result.response.text().trim()
+
+            await logInteraction({
+                ...commonLogData,
+                question: `Generate Facebook post for topic: ${topic}`,
+                answer: facebookPost,
+                metadata: { action: 'generate_facebook_post' }
+            })
 
             return NextResponse.json({
                 success: true,
