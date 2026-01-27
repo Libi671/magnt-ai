@@ -81,6 +81,22 @@ export default function NewTaskPage() {
   const [phoneLoading, setPhoneLoading] = useState(false)
   const [userHasPhone, setUserHasPhone] = useState(false)
   const [userHasWorkshopConsent, setUserHasWorkshopConsent] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  const notifyAdmin = async (taskId: string, userId: string) => {
+    console.log('notifyAdmin called with:', { taskId, userId })
+    try {
+      const response = await fetch('/api/notify-admin-new-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, userId })
+      })
+      const result = await response.json()
+      console.log('notifyAdmin result:', result)
+    } catch (e) {
+      console.error('Failed to notify admin', e)
+    }
+  }
 
   const scrollToBottom = () => {
     // Scroll only within the chat container, not the whole page
@@ -101,6 +117,9 @@ export default function NewTaskPage() {
       if (user?.email) {
         setTaskData(prev => ({ ...prev, notify_email: user.email! }))
       }
+      if (user?.id) {
+        setCurrentUserId(user.id)
+      }
       // Check if user has phone and workshop_consent in their profile
       if (user?.id) {
         try {
@@ -109,9 +128,9 @@ export default function NewTaskPage() {
             .select('phone, workshop_consent')
             .eq('id', user.id)
             .single()
-          
+
           console.log('User data from DB:', { userData, error })
-          
+
           if (!error && userData) {
             if (userData.phone) {
               setUserHasPhone(true)
@@ -543,14 +562,19 @@ ${data.facebookPost}
         setCreatedTask({ id: data.id, title: data.title })
         // DEBUG: Log the state
         console.log('Task created! userHasWorkshopConsent:', userHasWorkshopConsent)
-        
+
         // If user hasn't consented to workshop yet, show phone modal first
         // This ensures we ask for phone after completing the challenge
         if (!userHasWorkshopConsent) {
           console.log('Showing phone modal')
+          // If we already have phone, notify now. If not, wait for modal.
+          if (userHasPhone && user?.id) {
+            notifyAdmin(data.id, user.id)
+          }
           setShowPhoneModal(true)
         } else {
           console.log('Showing success modal (user already consented)')
+          if (user?.id) notifyAdmin(data.id, user.id)
           setShowSuccessModal(true)
         }
       }
@@ -589,22 +613,33 @@ ${data.facebookPost}
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         setUserHasWorkshopConsent(true)
         setUserHasPhone(true)
         setShowPhoneModal(false)
+        if (createdTask?.id && currentUserId) {
+          notifyAdmin(createdTask.id, currentUserId)
+        }
         setShowSuccessModal(true)
       } else {
         console.error('API error:', data)
         alert('שגיאה בשמירה, אבל המגנט נוצר בהצלחה!')
         setShowPhoneModal(false)
+        // Still notify admin even if phone save failed
+        if (createdTask?.id && currentUserId) {
+          notifyAdmin(createdTask.id, currentUserId)
+        }
         setShowSuccessModal(true)
       }
     } catch (error) {
       console.error('Error saving phone:', error)
       alert('שגיאה בשמירה, אבל המגנט נוצר בהצלחה!')
       setShowPhoneModal(false)
+      // Still notify admin even if phone save failed
+      if (createdTask?.id && currentUserId) {
+        notifyAdmin(createdTask.id, currentUserId)
+      }
       setShowSuccessModal(true)
     } finally {
       setPhoneLoading(false)
@@ -614,6 +649,10 @@ ${data.facebookPost}
   // Handle phone decline - user doesn't want workshop
   const handlePhoneDecline = () => {
     setShowPhoneModal(false)
+    // Notify even if declined (without phone)
+    if (createdTask?.id && currentUserId && !userHasPhone) {
+      notifyAdmin(createdTask.id, currentUserId)
+    }
     setShowSuccessModal(true)
   }
 
@@ -839,11 +878,11 @@ ${data.facebookPost}
           backdropFilter: 'blur(8px)',
           padding: '20px'
         }}>
-          <div className="card" style={{ 
-            maxWidth: '450px', 
-            width: '100%', 
-            padding: '32px', 
-            textAlign: 'center', 
+          <div className="card" style={{
+            maxWidth: '450px',
+            width: '100%',
+            padding: '32px',
+            textAlign: 'center',
             position: 'relative',
             background: 'linear-gradient(180deg, rgba(30, 32, 50, 1) 0%, rgba(25, 27, 40, 1) 100%)',
             border: '1px solid rgba(102, 126, 234, 0.3)'
@@ -857,12 +896,12 @@ ${data.facebookPost}
               <br /><br />
               תקבל טיפים יומיים, כלים מעשיים ותובנות שיעזרו לך למשוך יותר לקוחות.
             </p>
-            
+
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ 
-                color: 'var(--text-muted)', 
-                fontSize: '0.9rem', 
-                display: 'block', 
+              <label style={{
+                color: 'var(--text-muted)',
+                fontSize: '0.9rem',
+                display: 'block',
                 marginBottom: '8px',
                 textAlign: 'right'
               }}>
@@ -874,8 +913,8 @@ ${data.facebookPost}
                 placeholder="050-1234567"
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
-                style={{ 
-                  fontSize: '1.1rem', 
+                style={{
+                  fontSize: '1.1rem',
                   textAlign: 'center',
                   direction: 'ltr'
                 }}
@@ -887,7 +926,7 @@ ${data.facebookPost}
               <button
                 onClick={handlePhoneConsent}
                 className="btn btn-primary btn-large"
-                style={{ 
+                style={{
                   width: '100%',
                   padding: '14px 24px',
                   fontSize: '1rem',
@@ -900,7 +939,7 @@ ${data.facebookPost}
               <button
                 onClick={handlePhoneDecline}
                 className="btn btn-secondary"
-                style={{ 
+                style={{
                   width: '100%',
                   padding: '12px 24px',
                   fontSize: '0.9rem',
@@ -911,10 +950,10 @@ ${data.facebookPost}
                 לא מאשר - להמשיך בלי הסדנה
               </button>
             </div>
-            
-            <p style={{ 
-              color: 'var(--text-muted)', 
-              fontSize: '0.75rem', 
+
+            <p style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.75rem',
               marginTop: '16px',
               opacity: 0.7
             }}>
