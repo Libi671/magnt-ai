@@ -138,3 +138,8 @@ fbq('track', 'CompleteRegistration', {
 | Lead (Login) | `src/components/LoginTracker.tsx` | נטען ב-`dashboard/layout.tsx` |
 | CreateChallenge | `src/app/dashboard/tasks/new/page.tsx` | בפונקציית `handleSaveTask` |
 | CompleteRegistration | `src/app/t/[id]/TaskClient.tsx` | לפני `setCompleted(true)` |
+
+---
+
+## מדריך השקה
+מעוניין להשיק קמפיין? [קרא את מדריך ההקמה המלא](FACEBOOK_CAMPAIGN_GUIDE.md) שמסביר איך להשתמש באירוע `CreateChallenge` כמטרת המרה.
